@@ -1,0 +1,89 @@
+/****************************************************************************/
+/* options.h: commandline and config file reading for FRASCR application    */
+/*   To be built with cmake: options.h.in -> options.h.                     */
+/*   Configuration file is json format.                                     */
+/*   Json functionality provided by json-c library.                         */
+/*   Command-line parsing done with standard library get_opt type calls.    */
+/*   Last updated: 2024-04-09                                               */
+/****************************************************************************/
+/*  Author: Miguel Abele                                                    */
+/*  Copyrighted by Miguel Abele, 2024.                                      */
+/*                                                                          */
+/*  License information:                                                    */
+/*                                                                          */
+/*  This file is a part of the FRASCR application.                          */
+/*                                                                          */
+/*  FRASCR is free software; you can redistribute it and/or                 */
+/*  modify it under the terms of the GNU General Public License             */
+/*  as published by the Free Software Foundation; either version 3          */
+/*  of the License, or (at your option) any later version.                  */
+/*                                                                          */
+/*  FRASCR is distributed in the hope that it will be useful,               */
+/*  but WITHOUT ANY WARRANTY; without even the implied warranty of          */
+/*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the           */
+/*  GNU General Public License for more details.                            */
+/*                                                                          */
+/*  You should have received a copy of the GNU General Public License       */
+/*  along with this program; if not, write to the Free Software             */
+/*  Foundation, Inc., 51 Franklin Street, Fifth Floor,                      */
+/*  Boston, MA  02110-1301, USA.                                            */
+/****************************************************************************/
+
+
+#ifndef OPTIONS_H
+#define OPTIONS_H
+
+#include "utils.h"
+#include "debug.h"
+#include "options_struct.h"
+#include <stdio.h>
+
+#define frascr_VERSION_MAJOR @frascr_VERSION_MAJOR@
+#define frascr_VERSION_MINOR @frascr_VERSION_MINOR@
+
+#define OPT_BAD_CALL        -1
+#define OPT_BAD_OPTION      -2
+#define OPT_TOO_FEW         -3
+#define OPT_CONF_JSON       -4
+#define OPT_CONF_FILES      -5
+#define OPT_CONF_CANV       -6
+#define OPT_CONF_COLOR      -7
+#define OPT_CONF_N_MISMATCH -8
+#define OPT_CONF_CLR_SPACE  -9
+
+
+int process_options(CoreOpts * core,
+		    CanvasOpts * canv,
+		    DParam * debug,
+		    int num,
+		    char ** args);
+
+
+void options_core_cleanup(CoreOpts * core);
+
+
+void options_canvas_cleanup(CanvasOpts * canv);
+
+
+#define HELP_FOR_OPTIONS(out) { fprintf(out, "Version %d.%d \
+          \nUsage: [-flag value] [--longflag=value] ... [filenames list]\
+	  \n-a, --algorithm    set library path name for EXECUTE algorithm\
+	  \n-b, --bottom       set bottom (imaginary) coordinate in complex plane\
+	  \n-e, --escape       set escape limit: upper bound for number of iterations\
+	  \n-f, --file         configuration file for options\
+	  \n-h, --help         this message\
+	  \n-i, --pixelheight  set number of vertical pixels in computation\
+	  \n-I, --realheight   set height of domain in complex plane, beginning at BOTTOM\
+	  \n-l, --left         set left (real) coordinate in complex plane\
+	  \n-o, --output       set library path name for FINISH & VALIDATE functionality\
+	  \n                   default is to search library given by -a, --algorithm\
+	  \n-v, --verbose      increase verbosity of output by one level, may be called repeatedly\
+	  \n-j, --pixelwidth   set number of horizontal pixels in computation\
+	  \n-J, --realwidth    set width of domain in complex plane, beginning at LEFT\
+	  \n-x, --offsetre     set real part of complex constant used in iterative computation\
+	  \n                   default is zero\
+	  \n-y, --offsetim     set imaginary part of complex constant used in iterative computation\
+	  \n                   default is zero\n", frascr_VERSION_MAJOR, frascr_VERSION_MINOR); }
+
+
+#endif /* OPTIONS_h */

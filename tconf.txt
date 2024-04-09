@@ -1,0 +1,43 @@
+{    
+    "debug": {
+        "verbose": 3
+    },
+    "core": {
+        "location": "/ext/redcedar/code/fractal/C/build/lib",
+        "algorithm": "libmandelqb.so",
+        "output": "libcolorpng.so",
+        "file": [
+            "testput.png"
+        ]
+    },
+    "canvas": {
+        "bottom": 0.11646737,
+        "realheight": 0.01,
+        "pixelheight": 1600,
+        "left":-0.78568377,
+        "realwidth": 0.01,
+        "pixelwidth": 1600,
+        "offset_Re": 0.0,
+        "offset_Im": 0.0,
+        "escape": 1000
+    },
+    "color": {
+        "space": "lch",
+        "algorithm": {
+	         "type": "linear",
+	         "n": 2
+	    },   
+        "swatches": [
+             {	 
+                 "caxisa": 90,	
+                 "caxisb": 75,	
+                 "caxisc": 48
+             },
+             {
+                 "caxisa": 10,	
+                 "caxisb": 75,	
+                 "caxisc": 312
+             }
+        ]
+    }
+}
