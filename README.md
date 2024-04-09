@@ -8,6 +8,9 @@ Linux-based application built to run calculations and output the results as png 
  -  And, Mathematica is too expensive because, say, your institution doesn't want to foot the bill
  -  Oh yeah, and if like me you couldn't find a single colorspace library in C for some reason
 
+[a relative link](data/bw.png)
+[a relative link](data/clr.png)
+
 ## Current functionality
  -  Command-line argument processing OR json-based configuration file processing
  -  Mandelbrot set calculation for a quadratic function
