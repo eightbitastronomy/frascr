@@ -8,10 +8,8 @@ Linux-based application built to run calculations and output the results as png 
  -  And, Mathematica is too expensive because, say, your institution doesn't want to foot the bill
  -  Oh yeah, and if like me you couldn't find a single colorspace library in C for some reason
 
-<div style="width: 50%; height: 50%">
-![B&W](data/bw.png)
-![Color](data/clr.png)
-</div>
+<img src="https://github.com/eightbitastronomy/frascr/blob/1dc6347a2d0cb036c9c41b1978ae639650df3db3/data/bw.png" width=50% height=50%>
+<img src="https://github.com/eightbitastronomy/frascr/blob/1dc6347a2d0cb036c9c41b1978ae639650df3db3/data/clr.png" width=50% height=50%>
 
 ## Current functionality
  -  Command-line argument processing OR json-based configuration file processing
