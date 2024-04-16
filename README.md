@@ -32,7 +32,7 @@ Linux-based application built to run calculations and output the results as png 
  - [ ]  Rework so that 8-bit and 16-bit channel output can be selected as a config option
  - [ ]  Implement more goshdarn fractal libraries
  - [ ]  Expand the color library into something more independent and fully-functioning
- - [ ]  The skies the limit
+ - [ ]  The sky's the limit
 
 ## Contact / Info:
 Author: Miguel Abele
