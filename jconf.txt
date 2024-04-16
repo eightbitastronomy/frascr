@@ -1,0 +1,43 @@
+{    
+    "debug": {
+        "verbose": 1 
+    },
+    "core": {
+        "location": "lib",
+        "algorithm": "libjuliaqb.so",
+        "output": "libcolorpng.so",
+        "file": [
+            "testput.png"
+        ]
+    },
+    "canvas": {
+        "bottom": -0.51205,
+        "realheight": 0.02,
+        "pixelheight": 1200,
+        "left": -0.13205,
+        "realwidth": 0.02,
+        "pixelwidth": 1200,
+        "offset_Re": 0.11031,
+        "offset_Im": -0.67037,
+        "escape": 1000
+    },
+    "color": {
+        "space": "lch",
+        "algorithm": {
+	         "type": "linear",
+	         "n": 2
+	    },   
+        "swatches": [
+             {	 
+                 "caxisa": 90,	
+                 "caxisb": 75,	
+                 "caxisc": 48
+             },
+             {
+                 "caxisa": 10,	
+                 "caxisb": 75,	
+                 "caxisc": 312
+             }
+        ]
+    }
+}

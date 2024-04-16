@@ -53,6 +53,25 @@
 
 
 
+static inline counter_f find_max_intensity(Datum ** const dat,
+					   const int rows,
+					   const int cols)
+{
+  int i, j;
+  counter_f n;
+  counter_f max = 0;
+  for (i=0; i<rows; i++) {
+    for (j=0; j<cols; j++) {
+      n = dat[i][j].n;
+      if (n > max)
+	max = n;
+    }
+  }
+
+  return max;
+}
+
+
 void FINISH(CanvasOpts * opts,
 	    Datum *** dataa,
 	    int datal,
@@ -66,6 +85,7 @@ void FINISH(CanvasOpts * opts,
   Datum ** canvas = dataa[0];
   FILE * output = filea[0];
   unsigned int ** storage = NULL;
+  counter_f intensitymax;
   short_f storeval;
   double storevald;
   png_voidp errorptr = NULL;
@@ -146,6 +166,10 @@ void FINISH(CanvasOpts * opts,
       png_destroy_write_struct(&pngptr, &infoptr);
       return;
     }
+
+    /* find maximum intensity */
+
+    intensitymax = find_max_intensity(canvas, opts->nwidth, opts->nheight);
     
     /* transpose input data for libpng while converting from black & white to color */
     
@@ -157,17 +181,19 @@ void FINISH(CanvasOpts * opts,
       rows[i] = (png_byte *)(storage[i]);
       for (j=0; j<opts->nwidth; j++) {
 	/* pass intensity to from_intensity_to_color(), store sRGB as an integer in storeval */
-	storevald = (double)(canvas[j][i].n) / (double)(opts->escape);
+        //storevald = (double)(canvas[j][i].n) / (double)(opts->escape);
+	storevald = (double)(canvas[j][i].n) / (double)(intensitymax);
 	linear_by_intensity_norm(colors, storevald, &swatchI);
 	convert_lch_to_lab(&swatchluv, (BaseI *)swatchI);
 	convert_lab_to_xyz(&swatchxyz, &swatchluv);
 	convert_xyz_to_sRGB(&swatchrgb, &swatchxyz, (unsigned char)(MAX_SHORT));
-	storage[i][j] = swatchrgb.word;
+	//storage[i][j] = swatchrgb.word;
+	storage[opts->nheight-i-1][j] = swatchrgb.word; //must adjust i or png will be upside down
 	// NEED A SWITCH HERE?, BECAUSE SWATCH CAN BE OF VARIOUS TYPES!!!!
 	free((BaseI *)swatchI);
       }
     }
-    
+
     png_write_info(pngptr, infoptr);
     png_set_rows(pngptr, infoptr, rows);  
     

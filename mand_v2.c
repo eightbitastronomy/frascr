@@ -54,7 +54,7 @@ int main(int argc, char ** argv) {
   CoreOpts general;
   Datum ** canv = NULL;
 
-  debug.mask = DS;
+  debug.mask = D0;
   debug.out = stderr; 
   debug.outs = NULL;
   general.execs = NULL;
