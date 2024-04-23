@@ -172,7 +172,7 @@ void FINISH(CanvasOpts * opts,
     intensitymax = find_max_intensity(canvas, opts->nwidth, opts->nheight);
     
     /* transpose input data for libpng while converting from black & white to color */
-    
+
     storage = malloc(sizeof(unsigned int *)*opts->nheight);
     for (i=0; i<opts->nheight; i++)
       storage[i] = malloc(sizeof(unsigned int)*opts->nwidth);
@@ -182,7 +182,7 @@ void FINISH(CanvasOpts * opts,
       for (j=0; j<opts->nwidth; j++) {
 	/* pass intensity to from_intensity_to_color(), store sRGB as an integer in storeval */
         //storevald = (double)(canvas[j][i].n) / (double)(opts->escape);
-	storevald = (double)(canvas[j][i].n) / (double)(intensitymax);
+	storevald = intensitymax == 0 ? 0.0 : (double)(canvas[j][i].n) / (double)(intensitymax);
 	linear_by_intensity_norm(colors, storevald, &swatchI);
 	convert_lch_to_lab(&swatchluv, (BaseI *)swatchI);
 	convert_lab_to_xyz(&swatchxyz, &swatchluv);
@@ -202,7 +202,7 @@ void FINISH(CanvasOpts * opts,
     png_write_png(pngptr, infoptr, PNG_TRANSFORM_IDENTITY, NULL);
     png_write_image(pngptr, rows);
     png_write_end(pngptr, infoptr);
-    
+
     /* Cleanup */
     png_destroy_write_struct(&pngptr, &infoptr);
     if (storage) {
