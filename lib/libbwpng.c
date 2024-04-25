@@ -137,8 +137,8 @@ void FINISH(CanvasOpts * opts,
     for (i=0; i<opts->nheight; i++) {
       rows[i] = (png_byte *)(storage[i]);
       for (j=0; j<opts->nwidth; j++) {
-	storeval = (short_f)((double)MAX_VAL * (double)canvas[i][j].n / (double)opts->escape);
-	storage[j][i] = storeval;
+	storeval = (short_f)((double)MAX_VAL * (double)canvas[j][i].n / (double)opts->escape);
+	storage[opts->nheight-i-1][j] = storeval;
       }
     }
     
