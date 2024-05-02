@@ -57,24 +57,8 @@ int main(int argc, char ** argv) {
   debug.mask = D0;
   debug.out = stderr; 
   debug.outs = NULL;
-  general.execs = NULL;
-  general.execute = NULL;
-  general.lib_exec = NULL;
-  general.finish = NULL;
-  general.lib_fin = NULL;
-  general.fins = NULL;
-  general.validate = NULL;
-  general.outs = NULL;
-  palette.bottom = 0.0;
-  palette.escape = 100;
-  palette.nheight = 100;
-  palette.height = 1.0;
-  palette.nwidth = 100;
-  palette.width = 1.0;
-  palette.left = 0.0;
-  palette.coord_Re = 0.0;
-  palette.coord_Im = 0.0;
-  palette.colors.swatch = NULL;
+  options_core_initialize(&general);
+  options_canvas_initialize(&palette);
 
   /* cmdline arg processing */
   if (argc > 1) {

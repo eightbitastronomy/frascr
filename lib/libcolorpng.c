@@ -128,7 +128,14 @@ void FINISH(CanvasOpts * opts,
     }
 
     png_init_io(pngptr, output);
-    png_set_compression_level(pngptr, Z_NO_COMPRESSION); // if compile err, try include zlib.h 
+
+    /* only support on/off for compression at the moment */
+    if (opts->compression == 0) {
+      png_set_compression_level(pngptr, Z_NO_COMPRESSION);
+    } else {
+      png_set_compression_level(pngptr, Z_BEST_COMPRESSION); // if compile err, try include zlib.h
+    }
+
     png_set_IHDR(pngptr, infoptr, opts->nwidth, opts->nheight, 8,
 		 PNG_COLOR_TYPE_RGB_ALPHA, PNG_INTERLACE_NONE,
 		 PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);

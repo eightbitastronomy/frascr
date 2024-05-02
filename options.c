@@ -188,6 +188,28 @@ int file_reader(CoreOpts * core,
   canv->coord_Im = json_object_get_double(minor);
   minor = json_object_object_get(major, "escape");
   canv->escape = (counter_f)json_object_get_int(minor);
+  minor = json_object_object_get(major, "compression");
+  canv->compression = (int_f)json_object_get_int(minor);
+
+  /* secondary canvas information: will be passed to execute fctn, which must know how to use it */
+  /* secondary is optional and might not be present */
+  
+  minor = json_object_object_get(major, "secondary");
+  if (json_object_get_type(minor) != json_type_null) {
+    filel = json_object_array_length(minor);
+    canv->secondary = malloc(filel*sizeof(char *));
+    if (canv->secondary == NULL) {
+      json_object_put(root);
+      if (core->outs)
+	free(core->outs);
+      return OPT_CONF_CANV;
+    }
+    for (i=0; i<filel; i++) {
+      sub = json_object_array_get_idx(minor, i);
+      canv->secondary[i] = strndup(json_object_get_string(sub),255);
+    }
+    canv->secondaryl = filel;
+  } 
 
   /* colorization options */
 
@@ -398,6 +420,35 @@ int process_options(CoreOpts * core,
 
 
 
+void options_canvas_initialize(CanvasOpts * canv) {
+  canv->bottom = 0.0;
+  canv->escape = 100;
+  canv->nheight = 100;
+  canv->height = 1.0;
+  canv->nwidth = 100;
+  canv->width = 1.0;
+  canv->left = 0.0;
+  canv->coord_Re = 0.0;
+  canv->coord_Im = 0.0;
+  canv->colors.swatch = NULL;
+  canv->secondary = NULL;
+  canv->secondaryl = -1;
+}
+
+
+void options_core_initialize(CoreOpts * core) {
+  core->execs = NULL;
+  core->execute = NULL;
+  core->lib_exec = NULL;
+  core->finish = NULL;
+  core->lib_fin = NULL;
+  core->fins = NULL;
+  core->validate = NULL;
+  core->outs = NULL;
+}
+
+
+
 void options_core_cleanup(CoreOpts * core)
 {
   int i;
@@ -417,6 +468,7 @@ void options_core_cleanup(CoreOpts * core)
 
 void options_canvas_cleanup(CanvasOpts * canv)
 {
+  int i;
   if (canv->colors.swatch) {
     switch(canv->colors.space) {
     case LCH:
@@ -439,6 +491,13 @@ void options_canvas_cleanup(CanvasOpts * canv)
       break;
     }
     canv->colors.swatch = NULL;
+  }
+  if (canv->secondary) {
+    while (canv->secondaryl > 0) {
+      free(canv->secondary[--(canv->secondaryl)]);
+    }
+    free(canv->secondary);
+    canv->secondary = NULL;
   }
   return;
 }

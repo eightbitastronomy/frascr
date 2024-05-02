@@ -17,7 +17,7 @@ add_subdirectory(lib)
 add_executable(frascr
   mand_v2.c
   debug.c
-  utils.c
+#  utils.c
   options.c
   libopen.c
 #  color.c

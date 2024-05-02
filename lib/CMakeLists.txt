@@ -14,6 +14,22 @@ target_include_directories(juliaqb PRIVATE
     "${PROJECT_SOURCE_DIR}/color"
 )
 
+#libgeneralmjexponential.so
+add_library(genmjexp SHARED libgeneralmjexponential.c)
+target_link_libraries(genmjexp PRIVATE m)
+target_include_directories(genmjexp PRIVATE 
+    "${PROJECT_BINARY_DIR}"
+    "${PROJECT_SOURCE_DIR}/color"
+)
+
+#libbrd.so
+add_library(brd SHARED libbrd.c)
+target_link_libraries(brd PRIVATE m)
+target_include_directories(brd PRIVATE 
+    "${PROJECT_BINARY_DIR}"
+    "${PROJECT_SOURCE_DIR}/color"
+)
+
 
 #libbwpng.so
 add_library(bwpng SHARED libbwpng.c)

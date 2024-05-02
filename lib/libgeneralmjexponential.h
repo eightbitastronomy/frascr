@@ -1,7 +1,15 @@
 /****************************************************************************/
-/* options_struct.h: struct definitions for FRASCR application              */
-/*   Canvas and Core structures.                                            */
-/*   Last updated: 2024-04-09.                                              */
+/* Libgeneralmjexponential.c: shared object for the FRASCR application      */
+/*   Provides an EXECUTE function: computation of the generalized sets for  */
+/*   the complex functions given by eqns 1-3 in "The generalized            */
+/*   Mandelbort-Julia [sic] sets from a class of complex exponential map,"  */
+/*   by W Xingyuan and S Qijiang, 2006. Implements a secondary-option       */
+/*   holding lambda and w (see paper), as well as the iteration type. The   */
+/*   iteration types are carried out in separate functions: Mandelbrot or   */
+/*   Julia set computation for each of the functions. UNDER CONSTRUCTION.   */
+/*   For a finishing library, this outputs only a single double array of    */
+/*   unsigned ints.                                                         */
+/*   Last updated: 2024-05-02                                               */
 /****************************************************************************/
 /*  Author: Miguel Abele                                                    */
 /*  Copyrighted by Miguel Abele, 2024.                                      */
@@ -26,52 +34,29 @@
 /*  Boston, MA  02110-1301, USA.                                            */
 /****************************************************************************/
 
-#ifndef OPTIONS_STRUCT_H
-#define OPTIONS_STRUCT_H
 
-#include "color.h"
+#ifndef LIBGENERALMJEXPONENTIAL_H
+#define LIBGENERALMJEXPONENTIAL_H
+
+
+#include "utils.h"
 #include "options.h"
 
-struct coreopts {
-  void * lib_exec;
-  int (*execute)();
-  char * execs;
-  void * lib_fin;
-  int (*finish)();
-  char * fins;
-  int (*validate)();
-  char ** outs;
-  int outl;
-};
-typedef struct coreopts CoreOpts;
+
+#define LIBBADCALL    -1
+#define LIBMALLOC     -2
+#define LIBFILE       -3
+#define LIBVALIDATE   -4
+#define LIBBADAUXLEN  -5
+#define LIBBADAUXOPT  -6
 
 
-struct coloropts {
-  /*int c_axis_a;
-  int c_axis_b;
-  int c_axis_c;*/
-  SwatchGenMode mode;
-  ColorSpace space;
-  int swatch_n;
-  void * swatch;
-};
-typedef struct coloropts ColorOpts;
-
-
-struct canvasopts {
-  int_f nheight, nwidth;
-  real_f left, width;
-  real_f bottom, height;
-  real_f coord_Re, coord_Im;
-  counter_f escape;
-  int_f compression;
-  ColorOpts colors;
-  int_f secondaryl;
-  char ** secondary;
-};
-typedef struct canvasopts CanvasOpts;
+int EXECUTE(CanvasOpts * canvopts,
+	    void (*finfunc)(),
+	    int (*validfunc)(),
+	    char ** outfn,
+	    int_f outfl); 
 
 
 
-#endif /* OPTIONS_STRUCT_H */
-
+#endif /* LIBGENERALMJEXPONENTIAL_H */

@@ -58,9 +58,11 @@ int process_options(CoreOpts * core,
 		    int num,
 		    char ** args);
 
+void options_core_initialize(CoreOpts * core);
 
 void options_core_cleanup(CoreOpts * core);
 
+void options_canvas_initialize(CanvasOpts * canv);
 
 void options_canvas_cleanup(CanvasOpts * canv);
 
