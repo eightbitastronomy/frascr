@@ -2,8 +2,9 @@
 /* Libmandelquadbrute.c: shared object for the FRASCR application           */
 /*   Provides an EXECUTE function: computation of the Mandelbrot set for    */
 /*   the quadratic function z^2 + c.                                        */
-/*   For a finishing library, this outputs only a single double array of    */
-/*   unsigned ints.                                                         */
+/*   For a finishing library, this outputs up to two double arrays of       */
+/*   unsigned ints. Use "secondary" in conf file, one double for the mult   */
+/*   variable and one integer for the option produce this second array.     */
 /*   Last updated: 2024-04-09                                               */
 /****************************************************************************/
 /*  Author: Miguel Abele                                                    */
@@ -32,10 +33,29 @@
 
 #include "libmandelquadbrute.h"
 #include <stdlib.h>
+#include <math.h>
 
 
 #define FREE_DBL_ARRAY(arr,l,m) { if ((arr)) { for (l=0; l<m; l++) { free((arr)[l]); } free((arr)); (arr)=NULL; } }
-#define CLOSE_FILE_ARRAY(arr,l,m) { if ((arr)) { for (l=0; l<m; l++) { if ((arr)[l]) fclose((arr)[l]); free((arr)); (arr)=NULL; } } }
+#define CLOSE_FILE_ARRAY(arr,l,m) { if ((arr)) { for (l=0; l<m; l++) { if ((arr)[l]) fclose((arr)[l]); } free((arr)); (arr)=NULL; } } 
+
+
+struct secondary_option {
+  real_f mult;
+  int option;
+};
+typedef struct secondary_option SecondaryOpts;
+
+
+static inline int process_sec_opts(char ** const src, const int_f l, SecondaryOpts * targ) {
+  if ((src==NULL) || (targ==NULL))
+    return LIBBADCALL;
+  if (l < 2)
+    return LIBBADAUXLEN;
+  targ->mult = atof(src[0]);
+  targ->option = atoi(src[1]);
+  return 0;
+}
 
 
 int EXECUTE(CanvasOpts * canvopts,
@@ -44,24 +64,47 @@ int EXECUTE(CanvasOpts * canvopts,
 	    char ** outfn,
 	    int_f outfl)
 {
-  /* The data holders used in execute */
-  Datum ** canv;
   /* Validator will check dataa and datal, outfa and outfl.
      dataa must be one spot for each data holder used above, datal the total num.
      outfa is the array of file pointers, and outfl the total num. */
+  
+  /* The data holders used in execute */
+  Datum ** canv = NULL;
+  Datum ** distcanv = NULL;
   Datum *** canva = NULL;
-  const int_f canvl = 1;
+  int_f canvl;
   FILE ** outfa = NULL;
+  SecondaryOpts secopts;
+  int ret;
+
   /* variables local to execute */
   real_f x, y, xsq, ysq, x0, y0, left, bottom, width, height;
   counter_f n, max;
   int_f nx, ny;
   int i, j;
 
+  /* check for problems in the function call / parameters */
+
   if ( (canvopts==NULL) || (finfunc==NULL) || (validfunc==NULL) || (outfn==NULL) )
     return LIBBADCALL;
 
-  /* setup memory and organize for validator */
+  if (canvopts->secondary) {
+    ret = process_sec_opts(canvopts->secondary, canvopts->secondaryl, &secopts);
+    if (ret)
+      return ret;
+  } else {
+    secopts.mult = 0.0;
+    secopts.option = 0;
+  }
+
+  /* setup memory and organize for validator:
+     Secondary options are not required for this lib, but this requires more logic
+     whenever dealing with memory on the heap, e.g. canva */
+
+  if (secopts.option == 0)
+    canvl = 1;
+  else
+    canvl = 2;
 
   canv = malloc(sizeof(Datum *)*canvopts->nwidth);
   if (canv == NULL)
@@ -74,16 +117,35 @@ int EXECUTE(CanvasOpts * canvopts,
     }
   }
 
+  if (secopts.option == 1) {
+    distcanv = malloc(sizeof(Datum *)*canvopts->nwidth);
+    if (distcanv == NULL)
+      return LIBMALLOC;
+    for (i=0; i<canvopts->nwidth; i++) {
+      distcanv[i] = malloc(sizeof(Datum)*canvopts->nheight);
+      if (distcanv[i-1] == NULL) {
+	FREE_DBL_ARRAY(distcanv,j,i-2);
+	FREE_DBL_ARRAY(canv,j,canvopts->nwidth);
+	return LIBMALLOC;
+      }
+    }
+  }
+
   canva = malloc(sizeof(Datum **)*canvl);
   if (canva == NULL) {
     FREE_DBL_ARRAY(canv,j,canvopts->nwidth);
+    FREE_DBL_ARRAY(distcanv,j,canvopts->nwidth);
     return LIBMALLOC;
   }
   canva[0] = canv;
 
+  if (secopts.option == 1)
+    canva[1] = distcanv;
+
   outfa = malloc(sizeof(FILE *)*outfl);
   if (outfa == NULL) {
     FREE_DBL_ARRAY(canv,j,canvopts->nwidth);
+    FREE_DBL_ARRAY(distcanv,j,canvopts->nwidth);
     free(canva);
     return LIBMALLOC;
   }
@@ -92,6 +154,7 @@ int EXECUTE(CanvasOpts * canvopts,
     if (!outfa[i-1]) {
       CLOSE_FILE_ARRAY(outfa,j,i-2);
       FREE_DBL_ARRAY(canv,j,canvopts->nwidth);
+      FREE_DBL_ARRAY(distcanv,j,canvopts->nwidth);
       free(canva);
       return LIBFILE;
     }
@@ -99,6 +162,7 @@ int EXECUTE(CanvasOpts * canvopts,
 
   if (validfunc(canva, canvl, outfa, outfl) != 0) {
     FREE_DBL_ARRAY(canv,j,canvopts->nwidth);
+    FREE_DBL_ARRAY(distcanv,j,canvopts->nwidth);
     free(canva);
     CLOSE_FILE_ARRAY(outfa,j,outfl);
     return LIBVALIDATE;
@@ -113,7 +177,7 @@ int EXECUTE(CanvasOpts * canvopts,
   ny = canvopts->nheight;
   height = canvopts->height;
   max = canvopts->escape;
-
+  
   /* core functionality, execute */
 
   for (i=0; i<nx; i++) {
@@ -142,12 +206,26 @@ int EXECUTE(CanvasOpts * canvopts,
 	  else
 	    break; 
 	} /* while n < max */
-	
+
       } /* else */
       
       canv[i][j].re = x0;
       canv[i][j].im = y0;
       canv[i][j].n = n;
+
+      /* the "distance canvas" computation (currently too brute force to be of value) */
+      if (secopts.option == 1) {
+	if (n == max) {
+	  distcanv[i][j].re = x0;
+	  distcanv[i][j].im = y0;
+	  xsq = x - x0;
+	  ysq = y - y0;
+	  distcanv[i][i].n = (counter_f)(sqrt(xsq*xsq+ysq*ysq) / secopts.mult);
+	} else {
+	  //distcanv[i][j].n = (counter_f)(sqrt(width*width+height*height) / secopts.mult);
+	  distcanv[i][j].n = 0.0;
+	}
+      }
 
     } /* for j */
   } /* for i */
@@ -157,6 +235,7 @@ int EXECUTE(CanvasOpts * canvopts,
   finfunc(canvopts, canva, canvl, outfa, outfl);
 
   FREE_DBL_ARRAY(canv,i,canvopts->nwidth);
+  FREE_DBL_ARRAY(distcanv,i,canvopts->nwidth);
   if (canva)
     free(canva);
   CLOSE_FILE_ARRAY(outfa,i,outfl);

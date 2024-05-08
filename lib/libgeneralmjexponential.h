@@ -9,7 +9,7 @@
 /*   Julia set computation for each of the functions. UNDER CONSTRUCTION.   */
 /*   For a finishing library, this outputs only a single double array of    */
 /*   unsigned ints.                                                         */
-/*   Last updated: 2024-05-02                                               */
+/*   Last updated: 2024 May                                                 */
 /****************************************************************************/
 /*  Author: Miguel Abele                                                    */
 /*  Copyrighted by Miguel Abele, 2024.                                      */

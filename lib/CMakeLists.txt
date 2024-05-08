@@ -2,6 +2,7 @@
 
 #libmandelqb.so
 add_library(mandelqb SHARED libmandelquadbrute.c)
+target_link_libraries(mandelqb PRIVATE m)
 target_include_directories(mandelqb PRIVATE 
     "${PROJECT_BINARY_DIR}"
     "${PROJECT_SOURCE_DIR}/color"

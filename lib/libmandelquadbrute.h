@@ -2,9 +2,10 @@
 /* Libmandelquadbrute.h: shared object for the FRASCR application           */
 /*   Provides an EXECUTE function: computation of the Mandelbrot set for    */
 /*   the quadratic function z^2 + c.                                        */
-/*   For a finishing library, this outputs only a single double array of    */
-/*   unsigned ints.                                                         */
-/*   Last updated: 2024-04-09                                               */
+/*   For a finishing library, this outputs up to two double arrays of       */
+/*   unsigned ints. Use "secondary" in conf file, one double for the mult   */
+/*   variable and one integer for the option produce this second array.     */
+/*   Last updated: 2024 May                                                 */
 /****************************************************************************/
 /*  Author: Miguel Abele                                                    */
 /*  Copyrighted by Miguel Abele, 2024.                                      */
@@ -42,6 +43,8 @@
 #define LIBMALLOC     -2
 #define LIBFILE       -3
 #define LIBVALIDATE   -4
+#define LIBBADAUXLEN  -5
+#define LIBBADAUXOPT  -6
 
 
 int EXECUTE(CanvasOpts * canvopts,

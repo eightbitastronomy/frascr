@@ -9,7 +9,7 @@
 /*   tionality.                                                             */
 /*   For a finishing library, this outputs only a single double array of    */
 /*   unsigned ints.                                                         */
-/*   Last updated: 2024-05-02                                               */
+/*   Last updated: 2024 May                                                 */
 /****************************************************************************/
 /*  Author: Miguel Abele                                                    */
 /*  Copyrighted by Miguel Abele, 2024.                                      */
@@ -35,7 +35,7 @@
 /****************************************************************************/
 
 
-#include "libgeneralmjexponential.h"
+#include "libbrd.h"
 #include <stdlib.h>
 #include <math.h>
 
@@ -182,7 +182,7 @@ int EXECUTE(CanvasOpts * canvopts,
 	    break; 
 
 	} /* while n < max */
-	
+
       } /* else */
       
       canv[i][j].re = lam_re;

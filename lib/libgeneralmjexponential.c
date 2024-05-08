@@ -9,7 +9,7 @@
 /*   Julia set computation for each of the functions. UNDER CONSTRUCTION.   */
 /*   For a finishing library, this outputs only a single double array of    */
 /*   unsigned ints.                                                         */
-/*   Last updated: 2024-05-02                                               */
+/*   Last updated: 2024 May                                                 */
 /****************************************************************************/
 /*  Author: Miguel Abele                                                    */
 /*  Copyrighted by Miguel Abele, 2024.                                      */
@@ -66,9 +66,30 @@ void type3_julia(CanvasOpts * canvopts,
 		 SecondaryOpts * secopts,
 		 Datum *** canv);
 
+void type1_mandel(CanvasOpts * canvopts,
+		  SecondaryOpts * secopts,
+		  Datum *** canv);
+
+void type2_mandel(CanvasOpts * canvopts,
+		  SecondaryOpts * secopts,
+		  Datum *** canv);
+
+void type3_mandel(CanvasOpts * canvopts,
+		  SecondaryOpts * secopts,
+		  Datum *** canv);
+
 
 static inline void * process_type(int x) {
   switch (x) {
+  case -3:
+    return type3_mandel;
+    break;
+  case -2:
+    return type2_mandel;
+    break;
+  case -1:
+    return type1_mandel;
+    break;
   case 1:
     return type1_julia;
     break;
@@ -258,12 +279,12 @@ void type1_julia(CanvasOpts * canvopts,
 	      thetaz = atan2(y,x);
 	      n += 1;
 	    }
-	    else
+	    else 
 	      break;
 	  }
 	  
 	} /* while n < max */
-	
+
       } /* if x < 50 */
       
       (*canv)[i][j].re = x0;
@@ -327,8 +348,9 @@ void type2_julia(CanvasOpts * canvopts,
 	while ( n < max ) {
 
 	  if (NEARZERO(rhoz,smallerinterval) == 1) {
-	    x = lam_re;
-	    y = lam_im;
+	    modbuf = exp(lam_re);
+	    x = modbuf*cos(lam_im);
+	    y = modbuf*sin(lam_im);
 	    n += 1;
 	  } else {
 	    if ( x <= 50. ) {
@@ -343,12 +365,12 @@ void type2_julia(CanvasOpts * canvopts,
 	      thetaz = atan2(y,x);
 	      n += 1;
 	    }
-	    else
+	    else 
 	      break;
 	  }
 	  
 	} /* while n < max */
-	
+
       } /* if x < 50 */
       
       (*canv)[i][j].re = x0;
@@ -389,6 +411,8 @@ void type3_julia(CanvasOpts * canvopts,
   lam_re = secopts->lre;
   lam_im = secopts->lim;
   //julia set: lambda doesn't change
+  rhol = sqrt(lam_re*lam_re + lam_im*lam_im);
+  thetal = atan2(lam_im, lam_re);
   
   /* core functionality, execute */
 
@@ -412,8 +436,8 @@ void type3_julia(CanvasOpts * canvopts,
 	while ( n < max ) {
 
 	  if (NEARZERO(rhoz,smallerinterval) == 1) {
-	    x = lam_re;
-	    y = lam_im;
+	    x = 1.0;
+	    y = 0.0;
 	    n += 1;
 	  } else {
 	    if ( x <= 50. ) {
@@ -428,12 +452,12 @@ void type3_julia(CanvasOpts * canvopts,
 	      thetaz = atan2(y,x);
 	      n += 1;
 	    }
-	    else
+	    else 
 	      break;
 	  }
 	  
 	} /* while n < max */
-	
+
       } /* if x < 50 */
       
       (*canv)[i][j].re = x0;
@@ -444,4 +468,254 @@ void type3_julia(CanvasOpts * canvopts,
   } /* for i */
 
   return;
+}
+
+
+void type1_mandel(CanvasOpts * canvopts,
+		  SecondaryOpts * secopts,
+		  Datum *** canv) {
+  real_f x, y, expbuf, modbuf, prodbuf, inner, left, bottom, width, height;
+  real_f logrhoz;
+  real_f thetaz, rhoz, thetal, rhol;
+  counter_f n, max;
+  real_f w_re, w_im;
+  real_f lam_re, lam_im;
+  real_f smallerinterval;
+  int_f nx, ny;
+  int i, j;
+
+  left = canvopts->left;
+  nx = canvopts->nwidth;
+  width = canvopts->width;
+  bottom = canvopts->bottom;
+  ny = canvopts->nheight;
+  height = canvopts->height;
+  max = canvopts->escape;
+  smallerinterval = MIN((width/(double)nx),(height/(double)ny));
+  w_re = secopts->wre;
+  w_im = secopts->wim;
+  
+  /* core functionality, execute */
+
+  for (i=0; i<nx; i++) {
+    for (j=0; j<ny; j++) {
+
+      //mandelbrot set: iterate lambda, but z starts at 0
+      lam_re = left + ((real_f)i) * width / ((real_f)nx);
+      lam_im = bottom + ((real_f)j) * height / ((real_f)ny);
+      rhol = sqrt(lam_re*lam_re + lam_im*lam_im);
+      thetal = atan2(lam_im, lam_re);
+      n = 0;
+
+      if ( lam_re > 50. ) {
+
+	continue;
+
+      } else {
+
+	x = 0.;
+	y = 0.;
+
+	while ( n < max ) {
+
+	  rhoz = sqrt(x*x + y*y);
+	  thetaz = atan2(y,x);
+	  if (NEARZERO(rhoz,smallerinterval) == 1) {
+	    x = lam_re;
+	    y = lam_im;
+	    n += 1;
+	  } else {
+	    if ( x <= 50. ) {
+	      logrhoz = log(rhoz);
+	      expbuf = exp(w_re*logrhoz-w_im*thetaz);
+	      prodbuf = w_im*logrhoz+w_re*thetaz;
+	      modbuf = rhol*exp(expbuf*cos(prodbuf));
+	      inner = thetal + expbuf*sin(prodbuf);
+	      x = modbuf*cos(inner);
+	      y = modbuf*sin(inner);
+	      n += 1;
+	    }
+	    else 
+	      break;
+	  }
+	  
+	} /* while n < max */
+
+      } /* if lam > 50 */
+      
+      (*canv)[i][j].re = lam_re;
+      (*canv)[i][j].im = lam_im;
+      (*canv)[i][j].n = n;
+
+    } /* for j */
+  } /* for i */
+
+  return;
+}
+
+
+void type2_mandel(CanvasOpts * canvopts,
+		  SecondaryOpts * secopts,
+		  Datum *** canv) {
+  real_f x, y, expbuf, modbuf, prodbuf, inner, left, bottom, width, height;
+  real_f logrhoz;
+  real_f thetaz, rhoz, thetal, rhol;
+  counter_f n, max;
+  real_f w_re, w_im;
+  real_f lam_re, lam_im;
+  real_f smallerinterval;
+  int_f nx, ny;
+  int i, j;
+
+  left = canvopts->left;
+  nx = canvopts->nwidth;
+  width = canvopts->width;
+  bottom = canvopts->bottom;
+  ny = canvopts->nheight;
+  height = canvopts->height;
+  max = canvopts->escape;
+  smallerinterval = MIN((width/(double)nx),(height/(double)ny));
+  w_re = secopts->wre;
+  w_im = secopts->wim;
+  
+  /* core functionality, execute */
+
+  for (i=0; i<nx; i++) {
+    for (j=0; j<ny; j++) {
+
+      //mandelbrot set: iterate lambda, but z starts at 0
+      lam_re = left + ((real_f)i) * width / ((real_f)nx);
+      lam_im = bottom + ((real_f)j) * height / ((real_f)ny);
+      n = 0;
+
+      if ( lam_re > 50. ) {
+
+	continue;
+
+      } else {
+
+	x = 0.;
+	y = 0.;
+
+	while ( n < max ) {
+
+	  rhoz = sqrt(x*x + y*y);
+	  thetaz = atan2(y,x);
+	  if (NEARZERO(rhoz,smallerinterval) == 1) {
+	    modbuf = exp(lam_re);
+	    x = modbuf*cos(lam_im);
+	    y = modbuf*sin(lam_im);
+	    n += 1;
+	  } else {
+	    if ( x <= 50. ) {
+	      logrhoz = log(rhoz);
+	      expbuf = exp(w_re*logrhoz-w_im*thetaz);
+	      prodbuf = w_im*logrhoz+w_re*thetaz;
+	      modbuf = exp(expbuf*cos(prodbuf)+lam_re);
+	      inner = expbuf*sin(prodbuf)+lam_im;
+	      x = modbuf*cos(inner);
+	      y = modbuf*sin(inner);
+	      n += 1;
+	    }
+	    else 
+	      break;
+	  }
+	  
+	} /* while n < max */
+
+      } /* if x < 50 */
+      
+      (*canv)[i][j].re = lam_re;
+      (*canv)[i][j].im = lam_im;
+      (*canv)[i][j].n = n;
+
+    } /* for j */
+  } /* for i */
+
+  return;
+
+}
+
+
+void type3_mandel(CanvasOpts * canvopts,
+		  SecondaryOpts * secopts,
+		  Datum *** canv) {
+  real_f x, y, expbuf, modbuf, prodbuf, inner, left, bottom, width, height;
+  real_f logrhoz;
+  real_f thetaz, rhoz, thetal, rhol;
+  counter_f n, max;
+  real_f w_re, w_im;
+  real_f lam_re, lam_im;
+  real_f smallerinterval;
+  int_f nx, ny;
+  int i, j;
+
+  left = canvopts->left;
+  nx = canvopts->nwidth;
+  width = canvopts->width;
+  bottom = canvopts->bottom;
+  ny = canvopts->nheight;
+  height = canvopts->height;
+  max = canvopts->escape;
+  smallerinterval = MIN((width/(double)nx),(height/(double)ny));
+  w_re = secopts->wre;
+  w_im = secopts->wim;
+  
+  /* core functionality, execute */
+
+  for (i=0; i<nx; i++) {
+    for (j=0; j<ny; j++) {
+
+      //mandelbrot set: iterate lambda, but z starts at 0
+      lam_re = left + ((real_f)i) * width / ((real_f)nx);
+      lam_im = bottom + ((real_f)j) * height / ((real_f)ny);
+      rhol = sqrt(lam_re*lam_re + lam_im*lam_im);
+      thetal = atan2(lam_im, lam_re);
+      n = 0;
+      
+      if ( lam_re > 50. ) {
+
+	continue;
+
+      } else {
+
+	x = 0.;
+	y = 0.;
+
+	while ( n < max ) {
+
+	  rhoz = sqrt(x*x + y*y);
+	  thetaz = atan2(y,x);
+	  if (NEARZERO(rhoz,smallerinterval) == 1) {
+	    x = 1.0;
+	    y = 0.0;
+	    n += 1;
+	  } else {
+	    if ( x <= 50. ) {
+	      logrhoz = log(rhoz);
+	      expbuf = exp(w_re*logrhoz-w_im*thetaz)/rhol;
+	      prodbuf = w_im*logrhoz+w_re*thetaz-thetal;
+	      modbuf = exp(expbuf*cos(prodbuf));
+	      inner = expbuf*sin(prodbuf);
+	      x = modbuf*cos(inner);
+	      y = modbuf*sin(inner);
+	      n += 1;
+	    }
+	    else 
+	      break;
+	  }
+	  
+	} /* while n < max */
+
+      } /* if x < 50 */
+      
+      (*canv)[i][j].re = lam_re;
+      (*canv)[i][j].im = lam_im;
+      (*canv)[i][j].n = n;
+
+    } /* for j */
+  } /* for i */
+
+  return;
+
 }

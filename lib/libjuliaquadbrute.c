@@ -4,7 +4,7 @@
 /*   for the quadratic function z^2 + c.                                    */
 /*   For a finishing library, this outputs only a single double array of    */
 /*   unsigned ints.                                                         */
-/*   Last updated: 2024-04-09                                               */
+/*   Last updated: 2024 May                                                 */
 /****************************************************************************/
 /*  Author: Miguel Abele                                                    */
 /*  Copyrighted by Miguel Abele, 2024.                                      */
@@ -140,7 +140,7 @@ int EXECUTE(CanvasOpts * canvopts,
 	n += 1;
 
       }
-	
+
       canv[i][j].n = n;
 
     } /* for j */
