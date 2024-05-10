@@ -180,9 +180,6 @@ int EXECUTE(CanvasOpts * canvopts,
   
   /* core functionality, execute */
 
-  fprintf(stderr,"About to executed loop\n");
-  fflush(stderr);
-  
   for (i=0; i<nx; i++) {
     for (j=0; j<ny; j++) {
 
@@ -233,15 +230,9 @@ int EXECUTE(CanvasOpts * canvopts,
     } /* for j */
   } /* for i */
 
-  fprintf(stderr,"Loop done, calling finfunc\n");
-  fflush(stderr);
-
   /* output results */
 
   finfunc(canvopts, canva, canvl, outfa, outfl);
-
-  fprintf(stderr,"returned from finfunc, cleaning up\n");
-  fflush(stderr);
 
   FREE_DBL_ARRAY(canv,i,canvopts->nwidth);
   FREE_DBL_ARRAY(distcanv,i,canvopts->nwidth);
