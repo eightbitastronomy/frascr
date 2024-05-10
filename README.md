@@ -8,10 +8,10 @@ Linux-based application built to run calculations and output the results as png 
  -  And, Mathematica is too expensive because, say, your institution doesn't want to foot the bill
  -  Oh yeah, and if like me you couldn't find a single colorspace library in C for some reason
 
-The framework of the project itself has so few constraints that you use it to generate "fly-through" fractal videos, on the condition you write the lib files necessary. In fact, there's nothing requiring you to use it to compute fractals.
+The framework of the project itself has so few constraints that you can use it to generate "fly-through" fractal videos, on the condition you write the lib files necessary. In fact, there's nothing requiring you to use it to compute fractals.
 
-<img src="https://github.com/eightbitastronomy/frascr/blob/1dc6347a2d0cb036c9c41b1978ae639650df3db3/data/bw.png" width=50% height=50%>
-<img src="https://github.com/eightbitastronomy/frascr/blob/1dc6347a2d0cb036c9c41b1978ae639650df3db3/data/clr.png" width=50% height=50%>
+<img src="https://github.com/eightbitastronomy/frascr/blob/main/data/exp3_mand_bw_1.png" width=50% height=50%>
+<img src="https://github.com/eightbitastronomy/frascr/blob/main/data/mand_clr_1.png" width=50% height=50%>
 
 ## Current functionality
  -  Command-line argument processing OR json-based configuration file processing
