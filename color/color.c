@@ -7,7 +7,7 @@
 /*   moving over to sRGB.                                                   */
 /*   Some of the algorithms implemented here follow work found online. A    */
 /*   URL has been provided below.                                           */
-/*   Last updated 2024-04-09                                                */
+/*   Last updated 2024 May                                                  */
 /****************************************************************************/
 /*  Author: Miguel Abele                                                    */
 /*  Copyrighted by Miguel Abele, 2024.                                      */
@@ -42,22 +42,24 @@
 
 
 
-#define ALLOCO(ob,tp,n)   (ob) = malloc(sizeof(tp)*n)
-#define ALLOCSW(ob,tp,n)  ALLOCO((*ob)->swatch,tp,n)
-#define GAMMACORRECT(x)   (x) <= .0031308 ? 12.92*(x) : 1.055*pow(x,1.0/2.4)-0.055
-#define FINV(x)           ( x > 6.0/29.0 ? pow(x, 3.0) : 27./24389.*(116.*(x) - 16.) )
+#define ALLOCO(ob,tp,n)     (ob) = malloc(sizeof(tp)*n)
+#define ALLOCSW(ob,tp,n)    ALLOCO((*ob)->swatch,tp,n)
+#define GAMMACORRECT(x)     (x) <= .0031308 ? 12.92*(x) : 1.055*pow(x,1.0/2.4)-0.055
+#define FINV(x)             ( x > 6.0/29.0 ? pow(x, 3.0) : 27./24389.*(116.*(x) - 16.) )
 #define INTERPS1(tp,mbr,targ,src,fr,n) (*((tp **)(targ)))->mbr = interpolate_S1(((tp *)((src)->swatch))[n].mbr,fr,((tp *)((src)->swatch))[n+1].mbr)
 #define INTERPS1D(tp,mbr,targ,src,fr,n) (*((tp **)(targ)))->mbr = interpolate_S1D(((tp *)(src)->swatch)[n].mbr,fr,((tp *)(src)->swatch)[n+1].mbr)
-#define INTERPC(tp,mbr,targ,src,fr,n) (*((tp **)(targ)))->rgba.mbr = interpolate_C(((tp *)(src)->swatch)[n].rgba.mbr,fr,((tp *)(src)->swatch)[n+1].rgba.mbr)
-#define DUPE_I(targ,src)  dupe_i_n(targ,src,1)
-#define DUPE_D(targ,src)  dupe_d_n(targ,src,1)
-#define DUPE_C(targ,src)  dupe_c_n(targ,src,1)
-#define ABS(x)            (x < 0 ? -1*x : x)
-#define MAXS1(x,y)        (x < 180 ? x : (y < 180 ? y : 180))
-#define MAXS1D(x,y)       (x < 180.0 ? x : (y < 180.0 ? y : 180.0))
+#define INTERPC8(tp,mbr,targ,src,fr,n) (*((tp **)(targ)))->rgba.mbr = interpolate_C(((tp *)(src)->swatch)[n].rgba.mbr,fr,((tp *)(src)->swatch)[n+1].rgba.mbr)
+#define INTERPC16(tp,mbr,targ,src,fr,n) (*((tp **)(targ)))->rgba.mbr = interpolate_S1(((tp *)(src)->swatch)[n].rgba.mbr,fr,((tp *)(src)->swatch)[n+1].rgba.mbr)
+#define DUPE_I(targ,src)    dupe_i_n(targ,src,1)
+#define DUPE_D(targ,src)    dupe_d_n(targ,src,1)
+#define DUPE_C8(targ,src)   dupe_c8_n(targ,src,1)
+#define DUPE_C16(targ,src)  dupe_c16_n(targ,src,1)
+#define ABS(x)              (x < 0 ? -1*x : x)
+#define MAXS1(x,y)          (x < 180 ? x : (y < 180 ? y : 180))
+#define MAXS1D(x,y)         (x < 180.0 ? x : (y < 180.0 ? y : 180.0))
 
-#define GAMMACORRALT(x)   (x) <= 0.0031308 ? 3294.6*(x) : 269.025*pow(x,1.0/2.4)-14.025
-#define FINVOLD(x)        ( x < 6.0/29.0 ? pow(x, 3.0) : 3.0*36.0/29.0/29.0*((x) - 4.0/29.0) )
+#define GAMMACORRALT(x)     (x) <= 0.0031308 ? 3294.6*(x) : 269.025*pow(x,1.0/2.4)-14.025
+#define FINVOLD(x)          ( x < 6.0/29.0 ? pow(x, 3.0) : 3.0*36.0/29.0/29.0*((x) - 4.0/29.0) )
 //#define EVEN(x)           (ceil((double)x)/2 == x/2 ? 1 : 0)
 //#define MAX(x,y)          (x < y ? y : x)  //looks obsolete
 //#define MIDDLE(x)         (floor((double)x)/2)
@@ -88,7 +90,7 @@ static inline void dupe_d_n(BaseD * targ, BaseD * src, int n) {
 
 
 
-static inline void dupe_c_n(BaseC8 * targ, BaseC8 * src, int n) {
+static inline void dupe_c8_n(BaseC8 * targ, BaseC8 * src, int n) {
   int i;
   for (i=0; i<n; i++) {
     targ[i].rgba.r = src[i].rgba.r;
@@ -99,12 +101,23 @@ static inline void dupe_c_n(BaseC8 * targ, BaseC8 * src, int n) {
 
 
 
+static inline void dupe_c16_n(BaseC16 * targ, BaseC16 * src, int n) {
+  int i;
+  for (i=0; i<n; i++) {
+    targ[i].rgba.r = src[i].rgba.r;
+    targ[i].rgba.g = src[i].rgba.g;
+    targ[i].rgba.b = src[i].rgba.b;
+  }
+}
+
+
 
 static inline int s1(const int x)
 {
   int r = x % 360;
   return r > 0 ? r : r + 360;
 }
+
 
 
 static inline double s1D(const double x)
@@ -200,7 +213,7 @@ ColorSpace space_to_space(const char * space)
   if (strcmp("ciexyz", space) == 0)
     return CIEXYZ;
   if (strcmp("srgb", space) == 0)
-    return SRGB;
+    return SRGB8;
   return MONO;
 }
 
@@ -375,9 +388,13 @@ void sample_by_intensity_norm(const Wheel * w, const double intensity, void ** o
     ALLOCO(outswatch,BaseD,1);
     DUPE_D(&(((BaseD *)w->swatch)[landing_bin]),outswatch);
     break;
-  case SRGB:
+  case SRGB8:
     ALLOCO(outswatch,BaseC8,1);
-    DUPE_C(&(((BaseC8 *)w->swatch)[landing_bin]),outswatch);
+    DUPE_C8(&(((BaseC8 *)w->swatch)[landing_bin]),outswatch);
+    break;
+  case SRGB16:
+    ALLOCO(outswatch,BaseC16,1);
+    DUPE_C16(&(((BaseC16 *)w->swatch)[landing_bin]),outswatch);
     break;
   default:
     ALLOCO(outswatch,BaseI,1);
@@ -440,11 +457,17 @@ void linear_by_intensity_norm(const Wheel * w, const double intensity, void ** o
     INTERPS1D(BaseD, b, output, w, remainder, below);
     INTERPS1D(BaseD, c, output, w, remainder, below);
     break;
-  case SRGB:
+  case SRGB8:
     ALLOCO(*((BaseC8 **)(output)),BaseC8,1);
-    INTERPC(BaseC8, r, output, w, remainder, below);
-    INTERPC(BaseC8, g, output, w, remainder, below);
-    INTERPC(BaseC8, b, output, w, remainder, below);
+    INTERPC8(BaseC8, r, output, w, remainder, below);
+    INTERPC8(BaseC8, g, output, w, remainder, below);
+    INTERPC8(BaseC8, b, output, w, remainder, below);
+    break;
+  case SRGB16:
+    ALLOCO(*((BaseC16 **)(output)),BaseC16,1);
+    INTERPC16(BaseC16, r, output, w, remainder, below);
+    INTERPC16(BaseC16, g, output, w, remainder, below);
+    INTERPC16(BaseC16, b, output, w, remainder, below);
     break;
   default:
     ALLOCO(*((BaseI **)(output)),BaseI,1);
@@ -469,6 +492,8 @@ int initialize_wheel(Wheel ** w,
   (*w)->space = space;
   switch (space) {
   case LCH:
+    fprintf(stderr,"Initialize wheel: lch\n");
+    fflush(stderr);
     ALLOCSW(w,BaseI,n);
     dupe_i_n((BaseI *)((*w)->swatch), (BaseI *)(swatches), n);
     break;
@@ -484,9 +509,13 @@ int initialize_wheel(Wheel ** w,
     ALLOCSW(w,BaseD,n);
     dupe_d_n((BaseD *)((*w)->swatch), (BaseD *)(swatches), n);
     break;
-  case SRGB:
+  case SRGB8:
     ALLOCSW(w,BaseC8,n);
-    dupe_c_n((BaseC8 *)((*w)->swatch), (BaseC8 *)(swatches), n);
+    dupe_c8_n((BaseC8 *)((*w)->swatch), (BaseC8 *)(swatches), n);
+    break;
+  case SRGB16:
+    ALLOCSW(w,BaseC16,n);
+    dupe_c16_n((BaseC16 *)((*w)->swatch), (BaseC16 *)(swatches), n);
     break;
   default:
     ALLOCSW(w,BaseI,n);

@@ -1,26 +1,33 @@
 {    
     "debug": {
-        "verbose": 1 
+        "verbose": 3 
     },
     "core": {
         "location": "lib",
-        "algorithm": "libjuliaqb.so",
-        "output": "libcolorpng.so",
+        "algorithm": "libgenmjexp.so",
+        "output": "libbwpng.so",
         "file": [
-            "testput.png"
+            "outmj.png"
         ]
     },
     "canvas": {
-        "bottom": -0.51205,
-        "realheight": 0.02,
-        "pixelheight": 1200,
-        "left": -0.13205,
-        "realwidth": 0.02,
-        "pixelwidth": 1200,
-        "offset_Re": 0.11031,
-        "offset_Im": -0.67037,
-        "escape": 1000
-    },    
+        "bottom": -1.0,
+        "realheight": 2.0,
+        "pixelheight": 2000,
+        "left": -1.0,
+        "realwidth": 2.0,
+        "pixelwidth": 2000,
+        "offset_Re": 0.0,
+        "offset_Im": 0.0,
+        "escape": 100,
+	"secondary": [
+		     3.0,
+		     0.0,
+		     0.5,
+		     0.0,
+		     1,
+	]
+    },
     "visualization": {
     	"compression": 1,
 	"channeldepth": 8,

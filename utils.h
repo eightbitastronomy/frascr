@@ -5,7 +5,7 @@
 /*   Gives typedefs for integer types. These will need to be altered so     */
 /*   that the whole of the application, including the libraries, can        */
 /*   switch between 8, 16, and 32 bit storage, and 8 & 16 bit output.       */
-/*   Last updated 2024-04-09                                                */
+/*   Last updated 2024 May                                                  */
 /****************************************************************************/
 /*  Author: Miguel Abele                                                    */
 /*  Copyrighted by Miguel Abele, 2024.                                      */

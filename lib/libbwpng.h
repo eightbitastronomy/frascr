@@ -4,9 +4,6 @@
 /*   FINISH outputs black and white png files by converting unsigned        */
 /*   integer data into an intensity.                                        */
 /****************************************************************************/
-/* Update 2024-04-09: modified FINISH to output any # of canvases so long   */
-/*    as there is an output file for it.                                    */
-/****************************************************************************/
 /*  Author: Miguel Abele                                                    */
 /*  Copyrighted by Miguel Abele, 2024.                                      */
 /*                                                                          */

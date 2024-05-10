@@ -7,37 +7,46 @@
         "algorithm": "libmandelqb.so",
         "output": "libcolorpng.so",
         "file": [
-            "testput.png"
+            "mput1.png",
+	    "mput2.png"
         ]
     },
     "canvas": {
-        "bottom": 0.11646737,
-        "realheight": 0.01,
+        "bottom": 0.4,
+        "realheight": 0.4,
         "pixelheight": 1600,
-        "left":-0.78568377,
-        "realwidth": 0.01,
+        "left":-0.2,
+        "realwidth": 0.4,
         "pixelwidth": 1600,
         "offset_Re": 0.0,
         "offset_Im": 0.0,
-        "escape": 1000
+        "escape": 200,
+	"secondary": [
+		     0.000001,
+		     1
+	]
     },
-    "color": {
-        "space": "lch",
-        "algorithm": {
-	         "type": "linear",
-	         "n": 2
-	    },   
-        "swatches": [
-             {	 
-                 "caxisa": 90,	
-                 "caxisb": 75,	
-                 "caxisc": 48
-             },
-             {
-                 "caxisa": 10,	
-                 "caxisb": 75,	
-                 "caxisc": 312
-             }
-        ]
+    "visualization": {
+    	"compression": 1,
+	"channeldepth": 8,
+	"colorization": {
+        	"space": "lch",	
+		"algorithm": {
+	        	     "type": "linear",
+	         	     "n": 2
+		},
+		"swatches": [
+             		{	 
+				 "caxisa": 90,	
+                 	 	 "caxisb": 75,	
+                 		 "caxisc": 48
+             		},
+             		{
+				"caxisa": 10,	
+                 		"caxisb": 75,	
+                 		"caxisc": 312
+             		}
+        	]
+    	}
     }
 }

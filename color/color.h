@@ -7,7 +7,7 @@
 /*   moving over to sRGB.                                                   */
 /*   Some of the algorithms implemented here follow work found online. A    */
 /*   URL has been provided below.                                           */
-/*   Last updated 2024-04-09                                                */
+/*   Last updated 2024 May                                                  */
 /****************************************************************************/
 /*  Author: Miguel Abele                                                    */
 /*  Copyrighted by Miguel Abele, 2024.                                      */
@@ -52,7 +52,8 @@ enum color_space {
   CIELAB,
   CIELUV,
   CIEXYZ,
-  SRGB
+  SRGB8,
+  SRGB16
 };
 typedef enum color_space ColorSpace;
 

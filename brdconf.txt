@@ -1,0 +1,47 @@
+{    
+    "debug": {
+        "verbose": 3 
+    },
+    "core": {
+        "location": "lib",
+        "algorithm": "libbrd.so",
+        "output": "libbwpng.so",
+        "file": [
+            "outbrd.png"
+        ]
+    },
+    "canvas": {
+        "bottom": -6.0,
+        "realheight": 12.0,
+        "pixelheight": 1200,
+        "left": -3.0,
+        "realwidth": 6.0,
+        "pixelwidth": 600,
+        "offset_Re": 0.0,
+        "offset_Im": 0.0,
+        "escape": 500,
+	"secondary": [
+		     1.0,
+		     0.0,
+	]
+    },
+    "color": {
+        "space": "lch",
+        "algorithm": {
+	         "type": "linear",
+	         "n": 2
+	    },   
+        "swatches": [
+             {	 
+                 "caxisa": 90,	
+                 "caxisb": 75,	
+                 "caxisc": 48
+             },
+             {
+                 "caxisa": 10,	
+                 "caxisb": 75,	
+                 "caxisc": 312
+             }
+        ]
+    }
+}

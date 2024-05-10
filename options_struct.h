@@ -1,7 +1,7 @@
 /****************************************************************************/
 /* options_struct.h: struct definitions for FRASCR application              */
 /*   Canvas and Core structures.                                            */
-/*   Last updated: 2024-04-09.                                              */
+/*   Last updated: 2024 May                                                 */
 /****************************************************************************/
 /*  Author: Miguel Abele                                                    */
 /*  Copyrighted by Miguel Abele, 2024.                                      */
@@ -47,9 +47,6 @@ typedef struct coreopts CoreOpts;
 
 
 struct coloropts {
-  /*int c_axis_a;
-  int c_axis_b;
-  int c_axis_c;*/
   SwatchGenMode mode;
   ColorSpace space;
   int swatch_n;
@@ -58,16 +55,23 @@ struct coloropts {
 typedef struct coloropts ColorOpts;
 
 
+struct visualizationopts {
+  int compression;
+  int depth;
+  ColorOpts * colors;
+};
+typedef struct visualizationopts VisualizationOpts;
+
+
 struct canvasopts {
   uint32 nheight, nwidth;
   float64 left, width;
   float64 bottom, height;
   float64 coord_Re, coord_Im;
   uint32 escape;
-  uint32 compression;
-  ColorOpts colors;
   uint32 secondaryl;
   char ** secondary;
+  VisualizationOpts visuals;
 };
 typedef struct canvasopts CanvasOpts;
 

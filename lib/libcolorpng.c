@@ -4,12 +4,9 @@
 /*   FINISH (currently) outputs sRGB png files by mapping unsigned int data */
 /*   using a user-provided color palette (LCH/CIELAB, linear interpolation  */
 /*   provided via color library shared object.                              */
+/*  Last updated: 2024 May                                                  */
 /****************************************************************************/
-/* Update 2024-04-09: modified FINISH to output any # of canvases so long   */
-/*    as there is an output file for it.                                    */
-/****************************************************************************/
-/* NEEDS: o  to be able to handle other colorspaces as input                */
-/*        o  to be able to handle 16-bit output channels                    */
+/* NEEDS: o  completion of 16-bit channel implementation                    */
 /*        o  possibly, to handle sampling palettes, since I started them    */
 /*        o  Hence, needs color lib and frascr to be updated as well!       */
 /****************************************************************************/
@@ -130,13 +127,13 @@ void FINISH(CanvasOpts * opts,
     png_init_io(pngptr, output);
 
     /* only support on/off for compression at the moment */
-    if (opts->compression == 0) {
+    if (opts->visuals.compression == 0) {
       png_set_compression_level(pngptr, Z_NO_COMPRESSION);
     } else {
       png_set_compression_level(pngptr, Z_BEST_COMPRESSION); // if compile err, try include zlib.h
     }
 
-    png_set_IHDR(pngptr, infoptr, opts->nwidth, opts->nheight, 8,
+    png_set_IHDR(pngptr, infoptr, opts->nwidth, opts->nheight, opts->visuals.depth,
 		 PNG_COLOR_TYPE_RGB_ALPHA, PNG_INTERLACE_NONE,
 		 PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 
@@ -163,13 +160,12 @@ void FINISH(CanvasOpts * opts,
     }
     
     /* Create a LCH color wheel. */
-    
-    fflush(stderr);
+
     if (ret = initialize_wheel(&colors,
-			       opts->colors.swatch_n,
-			       opts->colors.space,
-			       opts->colors.mode,
-			       opts->colors.swatch)) {
+			       opts->visuals.colors->swatch_n,
+			       opts->visuals.colors->space,
+			       opts->visuals.colors->mode,
+			       opts->visuals.colors->swatch)) {
       png_destroy_write_struct(&pngptr, &infoptr);
       return;
     }

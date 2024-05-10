@@ -4,7 +4,11 @@
 /*   Configuration file is json format.                                     */
 /*   Json functionality provided by json-c library.                         */
 /*   Command-line parsing done with standard library get_opt type calls.    */
-/*   Last updated: 2024-04-09                                               */
+/*   Last updated: 2024 May                                                 */
+/****************************************************************************/
+/*  NEEDS: command-line switches must be updated to reflect changes to      */
+/*   config files. Possibly adopt only the new "visualization" switches,    */
+/*   while for the rest taking a default set of values (for swatches, etc)  */
 /****************************************************************************/
 /*  Author: Miguel Abele                                                    */
 /*  Copyrighted by Miguel Abele, 2024.                                      */
@@ -96,7 +100,7 @@ static inline void read_dbls(json_object * obj, int n, void * swatch) {
 }
 
 
-static inline void read_chrs(json_object * obj, int n, void * swatch) {
+static inline void read_chrs8(json_object * obj, int n, void * swatch) {
   int i;
   json_object * item;
   json_object * field;
@@ -112,13 +116,29 @@ static inline void read_chrs(json_object * obj, int n, void * swatch) {
 }
 
 
+static inline void read_chrs16(json_object * obj, int n, void * swatch) {
+  int i;
+  json_object * item;
+  json_object * field;
+  for (i=0; i<n; i++) {
+    item = json_object_array_get_idx(obj, i);
+    field = json_object_object_get(item, "caxisa");
+    ((BaseC16 *)swatch)[i].rgba.r = (uint16)json_object_get_int(field);
+    field = json_object_object_get(item, "caxisb");
+    ((BaseC16 *)swatch)[i].rgba.g = (uint16)json_object_get_int(field);
+    field = json_object_object_get(item, "caxisc");
+    ((BaseC16 *)swatch)[i].rgba.b = (uint16)json_object_get_int(field);
+  }
+}
+
+
 int file_reader(CoreOpts * core,
 		CanvasOpts * canv,
 		DParam * debug,
 		char * conff)
 {
   json_object * root;
-  json_object * major, * minor, * sub;
+  json_object * major, * minor, * sub, * batboy, * intern;
   char * loc;
   int filel;
   int i;
@@ -146,15 +166,24 @@ int file_reader(CoreOpts * core,
   minor = json_object_object_get(major, "output");
   CHECK(root,minor);
   location_concat(loc, json_object_get_string(minor), &(core->fins));
+  loc = NULL;
+  free(loc);
   minor = json_object_object_get(major, "file");
   CHECK(root,minor);
   filel = json_object_array_length(minor);
   core->outs = malloc(sizeof(char *)*filel);
+  if (core->outs == NULL) {
+    free(core->execs);
+    free(core->fins);
+    json_object_put(root);
+  }
   core->outl = filel;
   for (i=0; i<filel; i++) {
     sub = json_object_array_get_idx(minor, i);
     if (json_object_get_type(sub) == json_type_null) {
       free(core->outs);
+      free(core->execs);
+      free(core->fins);
       json_object_put(root);
       return OPT_CONF_FILES;
     }
@@ -166,9 +195,10 @@ int file_reader(CoreOpts * core,
   major = json_object_object_get(root, "canvas");
   if (json_object_get_type(major) == json_type_null) {
      json_object_put(root);
-    if (core->outs)
-      free(core->outs);
-    return OPT_CONF_CANV;
+     free(core->outs);
+     free(core->execs);
+     free(core->fins);
+     return OPT_CONF_CANV;
   }
   minor = json_object_object_get(major, "bottom");
   canv->bottom = json_object_get_double(minor);
@@ -188,8 +218,6 @@ int file_reader(CoreOpts * core,
   canv->coord_Im = json_object_get_double(minor);
   minor = json_object_object_get(major, "escape");
   canv->escape = (uint32)json_object_get_int(minor);
-  minor = json_object_object_get(major, "compression");
-  canv->compression = (uint32)json_object_get_int(minor);
 
   /* secondary canvas information: will be passed to execute fctn, which must know how to use it */
   /* secondary is optional and might not be present */
@@ -200,8 +228,9 @@ int file_reader(CoreOpts * core,
     canv->secondary = malloc(filel*sizeof(char *));
     if (canv->secondary == NULL) {
       json_object_put(root);
-      if (core->outs)
-	free(core->outs);
+      free(core->outs);
+      free(core->execs);
+      free(core->fins);
       return OPT_CONF_CANV;
     }
     for (i=0; i<filel; i++) {
@@ -209,59 +238,108 @@ int file_reader(CoreOpts * core,
       canv->secondary[i] = strndup(json_object_get_string(sub),255);
     }
     canv->secondaryl = filel;
-  } 
-
-  /* colorization options */
-
-  major = json_object_object_get(root, "color");
-  if (json_object_get_type(major) == json_type_null) {
-    json_object_put(root);
-    if (core->outs)
-      free(core->outs);
-    return OPT_CONF_COLOR;
   }
-  minor = json_object_object_get(major, "space");
-  canv->colors.space = space_to_space(json_object_get_string(minor));
-  if (canv->colors.space != MONO) {
-    minor = json_object_object_get(major, "algorithm");
-    sub = json_object_object_get(minor, "type");
-    canv->colors.mode = mode_to_mode(json_object_get_string(sub));
-    sub = json_object_object_get(minor, "n");
-    canv->colors.swatch_n = json_object_get_int(sub);
-    minor = json_object_object_get(major, "swatches");
-    filel = json_object_array_length(minor);
-    if (filel != canv->colors.swatch_n) {
-      json_object_put(root);
-      if (core->outs)
-	free(core->outs);
-      return OPT_CONF_N_MISMATCH;
+
+  /* visualization options */
+
+  major = json_object_object_get(root, "visualization");
+  if (json_object_get_type(major) == json_type_null) {
+    free(core->outs);
+    free(core->execs);
+    free(core->fins);
+    if (canv->secondary) {
+      while (canv->secondaryl > 0) {
+	free(canv->secondary[--(canv->secondaryl)]);
+      }
+      free(canv->secondary);
     }
-    switch (canv->colors.space) {
-    case LCH:
-      canv->colors.swatch = malloc(sizeof(BaseI *)*filel);
-      read_ints(minor, filel, canv->colors.swatch);
-      break;
-    case CIELUV:
-      canv->colors.swatch = malloc(sizeof(BaseD *)*filel);
-      read_dbls(minor, filel, canv->colors.swatch);
-      break;
-    case CIELAB:
-      canv->colors.swatch = malloc(sizeof(BaseD *)*filel);
-      read_dbls(minor, filel, canv->colors.swatch);
-      break;
-    case CIEXYZ:
-      canv->colors.swatch = malloc(sizeof(BaseD *)*filel);
-      read_dbls(minor, filel, canv->colors.swatch);
-      break;
-    case SRGB:
-      canv->colors.swatch = malloc(sizeof(BaseC8 *)*filel);
-      read_chrs(minor, filel, canv->colors.swatch);
-      break;
-    default:
+    json_object_put(root);
+    return OPT_BAD_OPTION;
+  }
+  minor = json_object_object_get(major, "compression");
+  canv->visuals.compression = json_object_get_int(minor);
+  minor = json_object_object_get(major, "channeldepth");
+  canv->visuals.depth = json_object_get_int(minor);
+
+  /* colorization options -- optional */
+
+  minor = json_object_object_get(major, "colorization");
+  if (json_object_get_type(minor) != json_type_null) {
+    canv->visuals.colors = malloc(sizeof(ColorOpts));
+    if (canv->visuals.colors == NULL) {
+      free(core->outs);
+      free(core->execs);
+      free(core->fins);
+      if (canv->secondary) {
+	while (canv->secondaryl > 0) {
+	  free(canv->secondary[--(canv->secondaryl)]);
+	}
+	free(canv->secondary);
+      }
       json_object_put(root);
-      if (core->outs)
+      return OPT_CONF_MALLOC;
+    }
+    sub = json_object_object_get(minor, "space");
+    canv->visuals.colors->space = space_to_space(json_object_get_string(sub));
+    if (canv->visuals.colors->space != MONO) {
+      sub = json_object_object_get(minor, "algorithm");
+      batboy = json_object_object_get(sub, "type");
+      canv->visuals.colors->mode = mode_to_mode(json_object_get_string(batboy));
+      batboy = json_object_object_get(sub, "n");
+      canv->visuals.colors->swatch_n = json_object_get_int(batboy);
+      sub = json_object_object_get(minor, "swatches");
+      filel = json_object_array_length(sub);
+      if (filel != canv->visuals.colors->swatch_n) {
+	json_object_put(root);
 	free(core->outs);
-      return OPT_CONF_CLR_SPACE;
+	free(core->execs);
+	free(core->fins);
+	if (canv->secondary) {
+	  while (canv->secondaryl > 0) {
+	    free(canv->secondary[--(canv->secondaryl)]);
+	  }
+	  free(canv->secondary);
+	}
+	return OPT_CONF_N_MISMATCH;
+      }
+      switch (canv->visuals.colors->space) {
+      case LCH:
+	canv->visuals.colors->swatch = malloc(sizeof(BaseI *)*filel);
+	read_ints(sub, filel, canv->visuals.colors->swatch);
+	break;
+      case CIELUV:
+	canv->visuals.colors->swatch = malloc(sizeof(BaseD *)*filel);
+	read_dbls(sub, filel, canv->visuals.colors->swatch);
+	break;
+      case CIELAB:
+	canv->visuals.colors->swatch = malloc(sizeof(BaseD *)*filel);
+	read_dbls(sub, filel, canv->visuals.colors->swatch);
+	break;
+      case CIEXYZ:
+	canv->visuals.colors->swatch = malloc(sizeof(BaseD *)*filel);
+	read_dbls(sub, filel, canv->visuals.colors->swatch);
+	break;
+      case SRGB8:
+	canv->visuals.colors->swatch = malloc(sizeof(BaseC8 *)*filel);
+	read_chrs8(sub, filel, canv->visuals.colors->swatch);
+	break;
+      case SRGB16:
+	canv->visuals.colors->swatch = malloc(sizeof(BaseC16 *)*filel);
+	read_chrs16(sub, filel, canv->visuals.colors->swatch);
+	break;
+      default:
+	json_object_put(root);
+	free(core->outs);
+	free(core->execs);
+	free(core->fins);
+	if (canv->secondary) {
+	  while (canv->secondaryl > 0) {
+	    free(canv->secondary[--(canv->secondaryl)]);
+	  }
+	  free(canv->secondary);
+	}
+	return OPT_CONF_CLR_SPACE;
+      }
     }
   }
 
@@ -420,6 +498,12 @@ int process_options(CoreOpts * core,
 
 
 
+static inline void options_visuals_initialize(VisualizationOpts * v) {
+  v->colors = NULL;
+}
+
+
+
 void options_canvas_initialize(CanvasOpts * canv) {
   canv->bottom = 0.0;
   canv->escape = 100;
@@ -430,9 +514,9 @@ void options_canvas_initialize(CanvasOpts * canv) {
   canv->left = 0.0;
   canv->coord_Re = 0.0;
   canv->coord_Im = 0.0;
-  canv->colors.swatch = NULL;
   canv->secondary = NULL;
   canv->secondaryl = -1;
+  options_visuals_initialize(&(canv->visuals));
 }
 
 
@@ -466,32 +550,45 @@ void options_core_cleanup(CoreOpts * core)
 
 
 
+static inline void options_visuals_cleanup(VisualizationOpts * v) {
+  if (v->colors) {
+    if (v->colors->swatch) {
+      switch(v->colors->space) {
+      case LCH:
+	free((BaseI *)(v->colors->swatch));
+	break;
+      case CIELUV:
+	free((BaseD *)(v->colors->swatch));
+	break;
+      case CIELAB:
+	free((BaseD *)(v->colors->swatch));
+	break;
+      case CIEXYZ:
+	free((BaseD *)(v->colors->swatch));
+	break;
+      case SRGB8:
+	free((BaseC8 *)(v->colors->swatch));
+	break;
+      case SRGB16:
+	free((BaseC16 *)(v->colors->swatch));
+	break;
+      default:
+	free((BaseI *)(v->colors->swatch));
+	break;
+      }
+      v->colors->swatch = NULL;
+    }
+    free(v->colors);
+    v->colors = NULL;
+  }
+}
+
+
+
 void options_canvas_cleanup(CanvasOpts * canv)
 {
   int i;
-  if (canv->colors.swatch) {
-    switch(canv->colors.space) {
-    case LCH:
-      free((BaseI *)(canv->colors.swatch));
-      break;
-    case CIELUV:
-      free((BaseD *)(canv->colors.swatch));
-      break;
-    case CIELAB:
-      free((BaseD *)(canv->colors.swatch));
-      break;
-    case CIEXYZ:
-      free((BaseD *)(canv->colors.swatch));
-      break;
-    case SRGB:
-      free((BaseC8 *)(canv->colors.swatch));
-      break;
-    default:
-      free((BaseI *)(canv->colors.swatch));
-      break;
-    }
-    canv->colors.swatch = NULL;
-  }
+  options_visuals_cleanup(&(canv->visuals));
   if (canv->secondary) {
     while (canv->secondaryl > 0) {
       free(canv->secondary[--(canv->secondaryl)]);

@@ -3,9 +3,7 @@
 /*   Provides a FINISH function and VALIDATE function.                      */
 /*   FINISH outputs black and white png files by converting unsigned        */
 /*   integer data into an intensity.                                        */
-/****************************************************************************/
-/* Update 2024-04-09: modified FINISH to output any # of canvases so long   */
-/*    as there is an output file for it.                                    */
+/*  Last updated: 2024 May                                                  */
 /****************************************************************************/
 /*  Author: Miguel Abele                                                    */
 /*  Copyrighted by Miguel Abele, 2024.                                      */
@@ -89,13 +87,13 @@ void FINISH(CanvasOpts * opts,
     png_init_io(pngptr, output);
 
     /* only support on/off for compression at the moment */
-    if (opts->compression == 0) {
+    if (opts->visuals.compression == 0) {
       png_set_compression_level(pngptr, Z_NO_COMPRESSION);
     } else {
       png_set_compression_level(pngptr, Z_BEST_COMPRESSION); // if compile err, try include zlib.h
     }
     
-    png_set_IHDR(pngptr, infoptr, opts->nwidth, opts->nheight, 16,
+    png_set_IHDR(pngptr, infoptr, opts->nwidth, opts->nheight, opts->visuals.depth,
 		 PNG_COLOR_TYPE_GRAY, PNG_INTERLACE_NONE,
 		 PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
     

@@ -10,7 +10,7 @@
 /*   VALIDATE function to the EXECUTE function. VALIDATE will only verify   */
 /*   that a workable number of data arrays and open file pointers           */
 /*   are present.                                                           */
-/*   Last updated 2024-04-09                                                */
+/*   Last updated 2024 May                                                  */
 /****************************************************************************/
 /*  Author: Miguel Abele                                                    */
 /*  Copyrighted by Miguel Abele, 2024.                                      */
