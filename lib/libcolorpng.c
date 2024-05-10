@@ -94,14 +94,14 @@ void FINISH(CanvasOpts * opts,
   png_text * textptr = NULL;
   const int textfields = 3;
   char texttmp[511];
-  int datasize = sizeof(BaseC);
+  int datasize = sizeof(BaseC8);
   Wheel * colors = NULL;
   BaseI basecolor;
-  BaseC converted;
+  BaseC8 converted;
   void * swatchI;
   BaseD swatchluv;
   BaseD swatchxyz;
-  BaseC swatchrgb;
+  BaseC8 swatchrgb;
 
   max = (datal <= filel ? datal : filel);
 
@@ -193,7 +193,7 @@ void FINISH(CanvasOpts * opts,
 	linear_by_intensity_norm(colors, storevald, &swatchI);
 	convert_lch_to_lab(&swatchluv, (BaseI *)swatchI);
 	convert_lab_to_xyz(&swatchxyz, &swatchluv);
-	convert_xyz_to_sRGB(&swatchrgb, &swatchxyz, (unsigned char)(MAX_SHORT));
+	convert_xyz_to_sRGB8(&swatchrgb, &swatchxyz, (unsigned char)(MAX_SHORT));
 	//storage[i][j] = swatchrgb.word;
 	storage[opts->nheight-i-1][j] = swatchrgb.word; //must adjust i or png will be upside down
 	// NEED A SWITCH HERE?, BECAUSE SWATCH CAN BE OF VARIOUS TYPES!!!!

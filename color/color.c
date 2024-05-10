@@ -88,7 +88,7 @@ static inline void dupe_d_n(BaseD * targ, BaseD * src, int n) {
 
 
 
-static inline void dupe_c_n(BaseC * targ, BaseC * src, int n) {
+static inline void dupe_c_n(BaseC8 * targ, BaseC8 * src, int n) {
   int i;
   for (i=0; i<n; i++) {
     targ[i].rgba.r = src[i].rgba.r;
@@ -174,7 +174,7 @@ static inline int interpolate_S1(const int left, const double frac, const int ri
 
 
 
-/* note, interpolation of BaseC cannot use the S1 function since unsigned char cannot even reach 360. */
+/* note, interpolation of BaseC8 cannot use the S1 function since unsigned char cannot even reach 360. */
 static inline unsigned char interpolate_C(const unsigned char left, const double frac, const unsigned char right)
 {
   double LR = (double)left - (double)right;
@@ -275,9 +275,9 @@ int convert_lab_to_xyz(BaseD * bxyz, BaseD * blab)
 
 
 
-int convert_xyz_to_sRGB(BaseC * brgb,
-			BaseD * bxyz,
-			unsigned char alpha)
+int convert_xyz_to_sRGB8(BaseC8 * brgb,
+			 BaseD * bxyz,
+			 unsigned char alpha)
 {
   const double m11 = 3.2406;
   const double m12 = -1.5372;
@@ -376,8 +376,8 @@ void sample_by_intensity_norm(const Wheel * w, const double intensity, void ** o
     DUPE_D(&(((BaseD *)w->swatch)[landing_bin]),outswatch);
     break;
   case SRGB:
-    ALLOCO(outswatch,BaseC,1);
-    DUPE_C(&(((BaseC *)w->swatch)[landing_bin]),outswatch);
+    ALLOCO(outswatch,BaseC8,1);
+    DUPE_C(&(((BaseC8 *)w->swatch)[landing_bin]),outswatch);
     break;
   default:
     ALLOCO(outswatch,BaseI,1);
@@ -441,10 +441,10 @@ void linear_by_intensity_norm(const Wheel * w, const double intensity, void ** o
     INTERPS1D(BaseD, c, output, w, remainder, below);
     break;
   case SRGB:
-    ALLOCO(*((BaseC **)(output)),BaseC,1);
-    INTERPC(BaseC, r, output, w, remainder, below);
-    INTERPC(BaseC, g, output, w, remainder, below);
-    INTERPC(BaseC, b, output, w, remainder, below);
+    ALLOCO(*((BaseC8 **)(output)),BaseC8,1);
+    INTERPC(BaseC8, r, output, w, remainder, below);
+    INTERPC(BaseC8, g, output, w, remainder, below);
+    INTERPC(BaseC8, b, output, w, remainder, below);
     break;
   default:
     ALLOCO(*((BaseI **)(output)),BaseI,1);
@@ -485,8 +485,8 @@ int initialize_wheel(Wheel ** w,
     dupe_d_n((BaseD *)((*w)->swatch), (BaseD *)(swatches), n);
     break;
   case SRGB:
-    ALLOCSW(w,BaseC,n);
-    dupe_c_n((BaseC *)((*w)->swatch), (BaseC *)(swatches), n);
+    ALLOCSW(w,BaseC8,n);
+    dupe_c_n((BaseC8 *)((*w)->swatch), (BaseC8 *)(swatches), n);
     break;
   default:
     ALLOCSW(w,BaseI,n);
@@ -540,7 +540,7 @@ static inline int wheelmap(int n, int start1, int end1, int start2, int end2)
 
 
 /* Based on CIELab->XYZ wikipedia algorithm */
-int convert_lab_to_xyz_old(BaseD * bxyz, BaseD * blab)
+int convert_lab_to_xyz_old8(BaseD * bxyz, BaseD * blab)
 {
   /* D65 values */
   double Xn = 0.950489;//95.0489;
@@ -634,7 +634,7 @@ int convert_luv_to_xyz_1(BaseD * bxyz, BaseD * bluv)
 
 
 
-int convert_xyz_to_sRGB_alt(BaseC * brgb,
+int convert_xyz_to_sRGB_alt(BaseC8 * brgb,
 			    BaseD * bxyz,
 			    unsigned char alpha)
 {
@@ -695,7 +695,7 @@ int convert_xyz_to_sRGB_alt(BaseC * brgb,
 
 
 
-int convert_xyz_to_RGB(BaseC * brgb, BaseD * bxyz, unsigned char alpha)
+int convert_xyz_to_RGB8(BaseC8 * brgb, BaseD * bxyz, unsigned char alpha)
 {
   double m11 = 2.36461385;
   double m12 = -0.89654057;

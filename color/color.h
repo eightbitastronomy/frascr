@@ -65,6 +65,12 @@ enum swatch_generation {
 typedef enum swatch_generation SwatchGenMode;
 
 
+typedef unsigned char uint8;
+typedef unsigned short uint16;
+typedef unsigned int uint32;
+typedef double float64;
+
+
 struct palette_wheel {
   void * swatch;
   int n;
@@ -89,16 +95,28 @@ struct palette_base_dbl {
 typedef struct palette_base_dbl BaseD;
 
 
-union palette_base_char {
+union palette_base_char_8 {
   struct {
-    unsigned char r;
-    unsigned char g;
-    unsigned char b;
-    unsigned char alpha;
+    uint8 r;
+    uint8 g;
+    uint8 b;
+    uint8 alpha;
   } rgba;
-  unsigned int word;
+  uint32 word;
 };
-typedef union palette_base_char BaseC;
+typedef union palette_base_char_8 BaseC8;
+
+
+union palette_base_char_16 {
+  struct {
+    uint16 r;
+    uint16 g;
+    uint16 b;
+    uint16 alpha;
+  } rgba;
+  uint32 word[2];
+};
+typedef union palette_base_char_16 BaseC16;
 
 
 
@@ -132,11 +150,11 @@ int convert_luv_to_xyz(BaseD * bxyz, BaseD * bluv);
 
 int convert_luv_to_xyz_1(BaseD * bxyz, BaseD * bluv);
 
-int convert_xyz_to_sRGB_old(BaseC * brgb, BaseD * bxyz, unsigned char alpha);
+int convert_xyz_to_sRGB8_old(BaseC8 * brgb, BaseD * bxyz, unsigned char alpha);
 
-int convert_xyz_to_sRGB(BaseC * brgb, BaseD * bxyz, unsigned char alpha);
+int convert_xyz_to_sRGB8(BaseC8 * brgb, BaseD * bxyz, unsigned char alpha);
 
-int convert_xyz_to_RGB(BaseC * brgb, BaseD * bxyz, unsigned char alpha);
+int convert_xyz_to_RGB8(BaseC8 * brgb, BaseD * bxyz, unsigned char alpha);
 
 
 #endif /* COLOR_H */

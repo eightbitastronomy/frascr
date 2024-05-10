@@ -103,11 +103,11 @@ static inline void read_chrs(json_object * obj, int n, void * swatch) {
   for (i=0; i<n; i++) {
     item = json_object_array_get_idx(obj, i);
     field = json_object_object_get(item, "caxisa");
-    ((BaseC *)swatch)[i].rgba.r = (unsigned char)json_object_get_int(field);
+    ((BaseC8 *)swatch)[i].rgba.r = (unsigned char)json_object_get_int(field);
     field = json_object_object_get(item, "caxisb");
-    ((BaseC *)swatch)[i].rgba.g = (unsigned char)json_object_get_int(field);
+    ((BaseC8 *)swatch)[i].rgba.g = (unsigned char)json_object_get_int(field);
     field = json_object_object_get(item, "caxisc");
-    ((BaseC *)swatch)[i].rgba.b = (unsigned char)json_object_get_int(field);
+    ((BaseC8 *)swatch)[i].rgba.b = (unsigned char)json_object_get_int(field);
   }
 }
 
@@ -254,7 +254,7 @@ int file_reader(CoreOpts * core,
       read_dbls(minor, filel, canv->colors.swatch);
       break;
     case SRGB:
-      canv->colors.swatch = malloc(sizeof(BaseC *)*filel);
+      canv->colors.swatch = malloc(sizeof(BaseC8 *)*filel);
       read_chrs(minor, filel, canv->colors.swatch);
       break;
     default:
@@ -484,7 +484,7 @@ void options_canvas_cleanup(CanvasOpts * canv)
       free((BaseD *)(canv->colors.swatch));
       break;
     case SRGB:
-      free((BaseC *)(canv->colors.swatch));
+      free((BaseC8 *)(canv->colors.swatch));
       break;
     default:
       free((BaseI *)(canv->colors.swatch));
