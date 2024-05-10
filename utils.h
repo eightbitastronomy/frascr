@@ -36,16 +36,16 @@
 #define UTILS_H
 
 
-typedef unsigned short short_f;
-typedef unsigned int int_f;
-typedef unsigned int counter_f;
-typedef double real_f;
+typedef unsigned char uint8;
+typedef unsigned short uint16;
+typedef unsigned int uint32;
+typedef double float64;
 
 
 struct datum {
-  real_f re;
-  real_f im;
-  counter_f n;
+  float64 re;
+  float64 im;
+  uint32 n;
 };
 
 typedef struct datum Datum;
@@ -53,16 +53,16 @@ typedef struct datum Datum;
 
 
 struct canvas_f {
-  int_f w;
-  int_f h;
+  uint32 w;
+  uint32 h;
 };
 
 struct palette_f {
-  real_f x;
-  real_f y;
-  real_f x0;
-  real_f y0;
-  counter_f n;
+  float64 x;
+  float64 y;
+  float64 x0;
+  float64 y0;
+  uint32 n;
 };
 
 

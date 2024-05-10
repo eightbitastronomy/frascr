@@ -45,13 +45,13 @@
 
 
 struct secondary_option {
-  real_f wre, wim, lre, lim;
+  float64 wre, wim, lre, lim;
   void (*iterfunc)();
 };
 typedef struct secondary_option SecondaryOpts;
 
 
-static inline int process_sec_opts(char ** const src, const int_f l, SecondaryOpts * targ) {
+static inline int process_sec_opts(char ** const src, const uint32 l, SecondaryOpts * targ) {
   if ((src==NULL) || (targ==NULL))
     return LIBBADCALL;
   if (l < 2)
@@ -67,7 +67,7 @@ int EXECUTE(CanvasOpts * canvopts,
 	    void (*finfunc)(),
 	    int (*validfunc)(),
 	    char ** outfn,
-	    int_f outfl)
+	    uint32 outfl)
 {
   /* The data holders used in execute */
   Datum ** canv;
@@ -75,16 +75,16 @@ int EXECUTE(CanvasOpts * canvopts,
      dataa must be one spot for each data holder used above, datal the total num.
      outfa is the array of file pointers, and outfl the total num. */
   Datum *** canva = NULL;
-  const int_f canvl = 1;
+  const uint32 canvl = 1;
   FILE ** outfa = NULL;
   /* variables local to execute */
-  real_f x, y, expbuf, inner, x0, y0, left, bottom, width, height;
-  real_f lamexp1, lamexp2, cosy, siny;
-  counter_f n, max;
-  real_f w_re, w_im;
-  real_f lam_re, lam_im, rhol, thetal;
-  real_f biggerbound;
-  int_f nx, ny;
+  float64 x, y, expbuf, inner, x0, y0, left, bottom, width, height;
+  float64 lamexp1, lamexp2, cosy, siny;
+  uint32 n, max;
+  float64 w_re, w_im;
+  float64 lam_re, lam_im, rhol, thetal;
+  float64 biggerbound;
+  uint32 nx, ny;
   int i, j;
   SecondaryOpts secopts;
   int ret;
@@ -156,8 +156,8 @@ int EXECUTE(CanvasOpts * canvopts,
   for (i=0; i<nx; i++) {
     for (j=0; j<ny; j++) {
 
-      lam_re = left + ((real_f)i) * width / ((real_f)nx);
-      lam_im = bottom + ((real_f)j) * height / ((real_f)ny);
+      lam_re = left + ((float64)i) * width / ((float64)nx);
+      lam_im = bottom + ((float64)j) * height / ((float64)ny);
       rhol = sqrt(lam_re*lam_re + lam_im*lam_im);
       thetal = atan2(lam_im, lam_re);
 

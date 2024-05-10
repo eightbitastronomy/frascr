@@ -48,7 +48,7 @@ int EXECUTE(CanvasOpts * canvopts,
 	    void (*finfunc)(),
 	    int (*validfunc)(),
 	    char ** outfn,
-	    int_f outfl); 
+	    uint32 outfl); 
 
 
 

@@ -41,13 +41,13 @@
 
 
 struct secondary_option {
-  real_f mult;
+  float64 mult;
   int option;
 };
 typedef struct secondary_option SecondaryOpts;
 
 
-static inline int process_sec_opts(char ** const src, const int_f l, SecondaryOpts * targ) {
+static inline int process_sec_opts(char ** const src, const uint32 l, SecondaryOpts * targ) {
   if ((src==NULL) || (targ==NULL))
     return LIBBADCALL;
   if (l < 2)
@@ -62,7 +62,7 @@ int EXECUTE(CanvasOpts * canvopts,
 	    void (*finfunc)(),
 	    int (*validfunc)(),
 	    char ** outfn,
-	    int_f outfl)
+	    uint32 outfl)
 {
   /* Validator will check dataa and datal, outfa and outfl.
      dataa must be one spot for each data holder used above, datal the total num.
@@ -72,15 +72,15 @@ int EXECUTE(CanvasOpts * canvopts,
   Datum ** canv = NULL;
   Datum ** distcanv = NULL;
   Datum *** canva = NULL;
-  int_f canvl;
+  uint32 canvl;
   FILE ** outfa = NULL;
   SecondaryOpts secopts;
   int ret;
 
   /* variables local to execute */
-  real_f x, y, xsq, ysq, x0, y0, left, bottom, width, height;
-  counter_f n, max;
-  int_f nx, ny;
+  float64 x, y, xsq, ysq, x0, y0, left, bottom, width, height;
+  uint32 n, max;
+  uint32 nx, ny;
   int i, j;
 
   /* check for problems in the function call / parameters */
@@ -183,8 +183,8 @@ int EXECUTE(CanvasOpts * canvopts,
   for (i=0; i<nx; i++) {
     for (j=0; j<ny; j++) {
 
-      x0 = left + ((real_f)i) * width / ((real_f)nx);
-      y0 = bottom + ((real_f)j) * height / ((real_f)ny);
+      x0 = left + ((float64)i) * width / ((float64)nx);
+      y0 = bottom + ((float64)j) * height / ((float64)ny);
       
       if ( x0*x0+y0*y0 > 4. ) {
 	n = 0;
@@ -220,9 +220,9 @@ int EXECUTE(CanvasOpts * canvopts,
 	  distcanv[i][j].im = y0;
 	  xsq = x - x0;
 	  ysq = y - y0;
-	  distcanv[i][i].n = (counter_f)(sqrt(xsq*xsq+ysq*ysq) / secopts.mult);
+	  distcanv[i][i].n = (uint32)(sqrt(xsq*xsq+ysq*ysq) / secopts.mult);
 	} else {
-	  //distcanv[i][j].n = (counter_f)(sqrt(width*width+height*height) / secopts.mult);
+	  //distcanv[i][j].n = (uint32)(sqrt(width*width+height*height) / secopts.mult);
 	  distcanv[i][j].n = 0.0;
 	}
       }

@@ -187,9 +187,9 @@ int file_reader(CoreOpts * core,
   minor = json_object_object_get(major, "offset_Im");
   canv->coord_Im = json_object_get_double(minor);
   minor = json_object_object_get(major, "escape");
-  canv->escape = (counter_f)json_object_get_int(minor);
+  canv->escape = (uint32)json_object_get_int(minor);
   minor = json_object_object_get(major, "compression");
-  canv->compression = (int_f)json_object_get_int(minor);
+  canv->compression = (uint32)json_object_get_int(minor);
 
   /* secondary canvas information: will be passed to execute fctn, which must know how to use it */
   /* secondary is optional and might not be present */

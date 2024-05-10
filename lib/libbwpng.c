@@ -50,15 +50,15 @@ void FINISH(CanvasOpts * opts,
   Datum ** canvas;
   FILE * output;
   unsigned short ** storage = NULL;
-  short_f MAX_VAL = ~(unsigned short)(0);
-  short_f storeval;
+  uint16 MAX_VAL = ~(unsigned short)(0);
+  uint16 storeval;
   png_voidp errorptr = NULL;
   png_structp pngptr = NULL;
   png_infop infoptr = NULL;
   png_text * textptr = NULL;
   const int textfields = 3;
   char texttmp[511];
-  int datasize = sizeof(short_f);
+  int datasize = sizeof(uint16);
 
   max = (datal <= filel ? datal : filel);
 
@@ -137,14 +137,14 @@ void FINISH(CanvasOpts * opts,
     
     /* transpose input data for libpng, and (for now) scale data into black & white */
 
-    storage = malloc(sizeof(short_f *)*opts->nheight);
+    storage = malloc(sizeof(uint16 *)*opts->nheight);
     for (i=0; i<opts->nheight; i++)
-      storage[i] = malloc(sizeof(short_f)*datasize*opts->nwidth);
+      storage[i] = malloc(sizeof(uint16)*datasize*opts->nwidth);
     png_byte ** rows = malloc(sizeof(png_byte *)*opts->nheight);
     for (i=0; i<opts->nheight; i++) {
       rows[i] = (png_byte *)(storage[i]);
       for (j=0; j<opts->nwidth; j++) {
-	storeval = (short_f)((double)MAX_VAL * (double)canvas[j][i].n / (double)opts->escape);
+	storeval = (uint16)((double)MAX_VAL * (double)canvas[j][i].n / (double)opts->escape);
 	storage[opts->nheight-i-1][j] = storeval;
       }
     }

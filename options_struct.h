@@ -59,14 +59,14 @@ typedef struct coloropts ColorOpts;
 
 
 struct canvasopts {
-  int_f nheight, nwidth;
-  real_f left, width;
-  real_f bottom, height;
-  real_f coord_Re, coord_Im;
-  counter_f escape;
-  int_f compression;
+  uint32 nheight, nwidth;
+  float64 left, width;
+  float64 bottom, height;
+  float64 coord_Re, coord_Im;
+  uint32 escape;
+  uint32 compression;
   ColorOpts colors;
-  int_f secondaryl;
+  uint32 secondaryl;
   char ** secondary;
 };
 typedef struct canvasopts CanvasOpts;

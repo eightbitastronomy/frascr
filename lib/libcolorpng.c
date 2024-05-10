@@ -53,13 +53,13 @@
 
 
 
-static inline counter_f find_max_intensity(Datum ** const dat,
+static inline uint32 find_max_intensity(Datum ** const dat,
 					   const int rows,
 					   const int cols)
 {
   int i, j;
-  counter_f n;
-  counter_f max = 0;
+  uint32 n;
+  uint32 max = 0;
   for (i=0; i<rows; i++) {
     for (j=0; j<cols; j++) {
       n = dat[i][j].n;
@@ -80,13 +80,13 @@ void FINISH(CanvasOpts * opts,
 {
   int i, j, k, ret;
   int max, rno;
-  short_f max_short_f = MAX_SHORT; /* see below */
-  counter_f max_counter_f = MAX_INT;
+  uint16 max_uint16 = MAX_SHORT; /* see below */
+  uint32 max_uint32 = MAX_INT;
   Datum ** canvas = dataa[0];
   FILE * output = filea[0];
   unsigned int ** storage = NULL;
-  counter_f intensitymax;
-  short_f storeval;
+  uint32 intensitymax;
+  uint16 storeval;
   double storevald;
   png_voidp errorptr = NULL;
   png_structp pngptr = NULL;

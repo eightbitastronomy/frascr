@@ -47,7 +47,7 @@
 
 int main(int argc, char ** argv) {
 
-  int_f i,j;
+  uint32 i,j;
   int retbuf;
   DParam debug;
   CanvasOpts palette;
@@ -105,11 +105,11 @@ int main(int argc, char ** argv) {
     DEBUG(&debug, D0, "No command-line arguments given. Use -h or --help for usage info.\n");
   }
 
-  DEBUG(&debug, DS, "frascr::main: sizeof unsigned short short_f: %d\
-                     \nfrascr::main: sizeof unsigned int int_f: %d\
-                     \nfrascr::main: sizeof unsigned int counter_f: %d\
-	             \nfrascr::main: sizeof double real_f: %d\n",
-	sizeof(short_f), sizeof(int_f), sizeof(counter_f), sizeof(real_f));
+  DEBUG(&debug, DS, "frascr::main: sizeof unsigned short uint16: %d\
+                     \nfrascr::main: sizeof unsigned int uint32: %d\
+                     \nfrascr::main: sizeof unsigned int uint32: %d\
+	             \nfrascr::main: sizeof double float64: %d\n",
+	sizeof(uint16), sizeof(uint32), sizeof(uint32), sizeof(float64));
   DEBUGFLUSH(&debug);
 
   /* open library/libraries */

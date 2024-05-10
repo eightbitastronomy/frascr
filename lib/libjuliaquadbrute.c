@@ -42,7 +42,7 @@ int EXECUTE(CanvasOpts * canvopts,
 	    void (*finfunc)(),
 	    int (*validfunc)(),
 	    char ** outfn,
-	    int_f outfl)
+	    uint32 outfl)
 {
   /* The data holders used in execute */
   Datum ** canv;
@@ -50,12 +50,12 @@ int EXECUTE(CanvasOpts * canvopts,
      dataa must be one spot for each data holder used above, datal the total num.
      outfa is the array of file pointers, and outfl the total num. */
   Datum *** canva = NULL;
-  const int_f canvl = 1;
+  const uint32 canvl = 1;
   FILE ** outfa = NULL;
   /* variables local to execute */
-  real_f x, y, xtmp, ytmp, x0, y0, left, bottom, width, height;
-  counter_f n, max;
-  int_f nx, ny;
+  float64 x, y, xtmp, ytmp, x0, y0, left, bottom, width, height;
+  uint32 n, max;
+  uint32 nx, ny;
   int i, j;
 
   if ( (canvopts==NULL) || (finfunc==NULL) || (validfunc==NULL) || (outfn==NULL) )
@@ -121,8 +121,8 @@ int EXECUTE(CanvasOpts * canvopts,
   for (i=0; i<nx; i++) {
     for (j=0; j<ny; j++) {
 
-      x = left + ((real_f)i) * width / ((real_f)nx);
-      y = bottom + ((real_f)j) * height / ((real_f)ny);
+      x = left + ((float64)i) * width / ((float64)nx);
+      y = bottom + ((float64)j) * height / ((float64)ny);
       n = 0;
       canv[i][j].re = x;
       canv[i][j].im = y;
