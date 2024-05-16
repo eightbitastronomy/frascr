@@ -30,8 +30,10 @@ The framework of the project itself has so few constraints that you can use it t
  -  No installation. Download, cd into build, run "cmake ..", then "cmake --build .". Your executable will be "frascr". Take a look at the config fileis in the source or use "frascr -h" to get an idea of how to run it.
  - contact me if you have questions or issues
 
+## Issues:
+ - [ ]  16-bit sRGB output is whack. Working on it.
+
 ## For the future:
- - [ ]  Rework so that 8-bit and 16-bit channel output can be selected as a config option
  - [ ]  Expand the color library into something more independent and fully-functioning
  - [ ]  The sky's the limit
 

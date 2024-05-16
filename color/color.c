@@ -46,18 +46,10 @@
 #define ALLOCSW(ob,tp,n)    ALLOCO((*ob)->swatch,tp,n)
 #define GAMMACORRECT(x)     (x) <= .0031308 ? 12.92*(x) : 1.055*pow(x,1.0/2.4)-0.055
 #define FINV(x)             ( x > 6.0/29.0 ? pow(x, 3.0) : 27./24389.*(116.*(x) - 16.) )
-#define INTERPS1(tp,mbr,targ,src,fr,n) (*((tp **)(targ)))->mbr = interpolate_S1(((tp *)((src)->swatch))[n].mbr,fr,((tp *)((src)->swatch))[n+1].mbr)
-#define INTERPS1D(tp,mbr,targ,src,fr,n) (*((tp **)(targ)))->mbr = interpolate_S1D(((tp *)(src)->swatch)[n].mbr,fr,((tp *)(src)->swatch)[n+1].mbr)
-#define INTERPC8(tp,mbr,targ,src,fr,n) (*((tp **)(targ)))->rgba.mbr = interpolate_C(((tp *)(src)->swatch)[n].rgba.mbr,fr,((tp *)(src)->swatch)[n+1].rgba.mbr)
-#define INTERPC16(tp,mbr,targ,src,fr,n) (*((tp **)(targ)))->rgba.mbr = interpolate_S1(((tp *)(src)->swatch)[n].rgba.mbr,fr,((tp *)(src)->swatch)[n+1].rgba.mbr)
-#define DUPE_I(targ,src)    dupe_i_n(targ,src,1)
-#define DUPE_D(targ,src)    dupe_d_n(targ,src,1)
-#define DUPE_C8(targ,src)   dupe_c8_n(targ,src,1)
-#define DUPE_C16(targ,src)  dupe_c16_n(targ,src,1)
 #define ABS(x)              (x < 0 ? -1*x : x)
-#define MAXS1(x,y)          (x < 180 ? x : (y < 180 ? y : 180))
-#define MAXS1D(x,y)         (x < 180.0 ? x : (y < 180.0 ? y : 180.0))
 
+
+/* macros implemented by functions slated for removal */
 #define GAMMACORRALT(x)     (x) <= 0.0031308 ? 3294.6*(x) : 269.025*pow(x,1.0/2.4)-14.025
 #define FINVOLD(x)          ( x < 6.0/29.0 ? pow(x, 3.0) : 3.0*36.0/29.0/29.0*((x) - 4.0/29.0) )
 //#define EVEN(x)           (ceil((double)x)/2 == x/2 ? 1 : 0)
@@ -68,7 +60,7 @@
 
 
 
-static inline void dupe_i_n(BaseI * targ, BaseI * src, int n) {
+static inline void dupe_i_n(BaseI * targ, const BaseI * const src, const int n) {
   int i;
   for (i=0; i<n; i++) {
     targ[i].a = src[i].a;
@@ -79,7 +71,7 @@ static inline void dupe_i_n(BaseI * targ, BaseI * src, int n) {
 
 
 
-static inline void dupe_d_n(BaseD * targ, BaseD * src, int n) {
+static inline void dupe_d_n(BaseD * targ, const BaseD * const src, const int n) {
   int i;
   for (i=0; i<n; i++) {
     targ[i].a = src[i].a;
@@ -90,23 +82,24 @@ static inline void dupe_d_n(BaseD * targ, BaseD * src, int n) {
 
 
 
-static inline void dupe_c8_n(BaseC8 * targ, BaseC8 * src, int n) {
+static inline void dupe_c8_n(BaseC8 * targ, const BaseC8 * const src, const int n) {
   int i;
-  for (i=0; i<n; i++) {
-    targ[i].rgba.r = src[i].rgba.r;
-    targ[i].rgba.g = src[i].rgba.g;
-    targ[i].rgba.b = src[i].rgba.b;
-  }
+  for (i=0; i<n; i++) 
+    targ[i].word = src[i].word;
 }
 
 
 
-static inline void dupe_c16_n(BaseC16 * targ, BaseC16 * src, int n) {
+static inline void dupe_c16_n(BaseC16 * targ, const BaseC16 * const src, const int n) {
   int i;
   for (i=0; i<n; i++) {
-    targ[i].rgba.r = src[i].rgba.r;
-    targ[i].rgba.g = src[i].rgba.g;
-    targ[i].rgba.b = src[i].rgba.b;
+    /*Commented lines are for a struct using two 32-bit ints. But, if this is run on
+      system where I can't be sure a long int is two ints, then I can't be sure that
+      my code properly implements 8-bit or 16-bit container sizes either. Rather the
+      code would need more detailed preprocessor instructions */
+    //targ[i].word[0] = src[i].word[0];
+    //targ[i].word[1] = src[i].word[1];
+    targ[i].word = src[i].word;
   }
 }
 
@@ -135,6 +128,9 @@ static inline double interpolate_S1D(const double left, const double frac, const
   double LR   = left - right;
   double LRS1 = s1D(LR);
   double interval; 
+
+# define MAXS1D(x,y) (x < 180.0 ? x : (y < 180.0 ? y : 180.0))
+
   if (LR < 0.) {
     interval = MAXS1D(LRS1,RLS1);
     if (RL==RLS1)
@@ -164,6 +160,9 @@ static inline int interpolate_S1(const int left, const double frac, const int ri
   int LR   = left - right;
   int LRS1 = s1(LR);
   double interval;
+
+# define MAXS1(x,y) (x < 180 ? x : (y < 180 ? y : 180))
+
   if (LR<0) {
     interval = (double)MAXS1(LRS1,RLS1);
     if (LRS1 > 180)
@@ -202,7 +201,7 @@ static inline unsigned char interpolate_C(const unsigned char left, const double
 
 
 
-ColorSpace space_to_space(const char * space)
+ColorSpace space_to_space(const char * const space)
 {
   if (strcmp("lch", space) == 0)
     return LCH;
@@ -212,14 +211,16 @@ ColorSpace space_to_space(const char * space)
     return CIELAB;
   if (strcmp("ciexyz", space) == 0)
     return CIEXYZ;
-  if (strcmp("srgb", space) == 0)
+  if (strcmp("srgb8", space) == 0)
     return SRGB8;
+  if (strcmp("srgb16", space) == 0)
+    return SRGB16;
   return MONO;
 }
 
 
 
-SwatchGenMode mode_to_mode(const char * mode)
+SwatchGenMode mode_to_mode(const char * const mode)
 {
   if (strcmp("sample", mode))
     return SAMPLE;
@@ -288,9 +289,9 @@ int convert_lab_to_xyz(BaseD * bxyz, BaseD * blab)
 
 
 
-int convert_xyz_to_sRGB8(BaseC8 * brgb,
+int convert_xyz_to_sRGB8(void * voidrgb,
 			 BaseD * bxyz,
-			 unsigned char alpha)
+			 uint16 alpha)
 {
   const double m11 = 3.2406;
   const double m12 = -1.5372;
@@ -301,6 +302,7 @@ int convert_xyz_to_sRGB8(BaseC8 * brgb,
   const double m31 = .0557;
   const double m32 = -.2040;
   const double m33 = 1.0570;
+  BaseC8 * brgb = (BaseC8 *)voidrgb;
   double x = bxyz->a;
   double y = bxyz->b;
   double z = bxyz->c;
@@ -317,7 +319,7 @@ int convert_xyz_to_sRGB8(BaseC8 * brgb,
   } else if ( r > 1.0 ) {
     r = 0.9999;
   } 
-  brgb->rgba.r = (unsigned char)((unsigned int)(255.0*r));
+  brgb->rgba.r = (uint8)((uint32)(255.0*r));
 
   /* G */
   r = x*m21 + y*m22 + z*m23;
@@ -327,7 +329,7 @@ int convert_xyz_to_sRGB8(BaseC8 * brgb,
   } else if ( r > 1.0 ) {
     r = 0.9999;
   }
-  brgb->rgba.g = (unsigned char)((unsigned int)(255.0*r));
+  brgb->rgba.g = (uint8)((uint32)(255.0*r));
 
   /* B */
   r = x*m31 + y*m32 + z*m33;
@@ -337,7 +339,66 @@ int convert_xyz_to_sRGB8(BaseC8 * brgb,
   } else if ( r > 1.0 ) {
     r = 0.9999;
   }
-  brgb->rgba.b = (unsigned char)((unsigned int)(255.0*r));
+  brgb->rgba.b = (uint8)((uint32)(255.0*r));
+
+  /* alpha */
+  brgb->rgba.alpha = (uint8)alpha;
+
+  return 0;
+}
+
+
+int convert_xyz_to_sRGB16(void * voidrgb,
+			  BaseD * bxyz,
+			  uint16 alpha)
+{
+  const double m11 = 3.2406;
+  const double m12 = -1.5372;
+  const double m13 = -.4986;
+  const double m21 = -.9689;
+  const double m22 = 1.8758;
+  const double m23 = .0415;
+  const double m31 = .0557;
+  const double m32 = -.2040;
+  const double m33 = 1.0570;
+  BaseC16 * brgb = (BaseC16 *)voidrgb;
+  double x = bxyz->a;
+  double y = bxyz->b;
+  double z = bxyz->c;
+  double r;
+
+  if ((bxyz==NULL) || (brgb==NULL))
+    return -1;
+
+  /* R */
+  r = x*m11 + y*m12 + z*m13;
+  r = GAMMACORRECT(r);
+  if (r < 0.0) {
+    r = 0.0;
+  } else if ( r > 1.0 ) {
+    r = 0.9999;
+  } 
+  brgb->rgba.r = (uint16)((uint32)(65535.0*r));
+
+  /* G */
+  r = x*m21 + y*m22 + z*m23;
+  r = GAMMACORRECT(r);
+  if (r < 0.0) {
+    r = 0.0;
+  } else if ( r > 1.0 ) {
+    r = 0.9999;
+  }
+  brgb->rgba.g = (uint16)((uint32)(65535.0*r));
+
+  /* B */
+  r = x*m31 + y*m32 + z*m33;
+  r = GAMMACORRECT(r);
+  if (r < 0.0) {
+    r = 0.0;
+  } else if ( r > 1.0 ) {
+    r = 0.9999;
+  }
+  brgb->rgba.b = (uint16)((uint32)(65535.0*r));
 
   /* alpha */
   brgb->rgba.alpha = alpha;
@@ -371,6 +432,12 @@ void sample_by_intensity_norm(const Wheel * w, const double intensity, void ** o
     landing_bin = below;
   else
     landing_bin = below + 1;
+
+# define DUPE_I(targ,src)    dupe_i_n(targ,src,1)
+# define DUPE_D(targ,src)    dupe_d_n(targ,src,1)
+# define DUPE_C8(targ,src)   dupe_c8_n(targ,src,1)
+# define DUPE_C16(targ,src)  dupe_c16_n(targ,src,1)
+
   switch(w->space) {
   case LCH:
     ALLOCO(outswatch,BaseI,1);
@@ -432,6 +499,11 @@ void linear_by_intensity_norm(const Wheel * w, const double intensity, void ** o
     remainder = landing - (double)below;
   }
 
+# define INTERPS1(tp,mbr,targ,src,fr,n) (*((tp **)(targ)))->mbr = interpolate_S1(((tp *)((src)->swatch))[n].mbr,fr,((tp *)((src)->swatch))[n+1].mbr)
+# define INTERPS1D(tp,mbr,targ,src,fr,n) (*((tp **)(targ)))->mbr = interpolate_S1D(((tp *)(src)->swatch)[n].mbr,fr,((tp *)(src)->swatch)[n+1].mbr)
+# define INTERPC8(tp,mbr,targ,src,fr,n) (*((tp **)(targ)))->rgba.mbr = interpolate_C(((tp *)(src)->swatch)[n].rgba.mbr,fr,((tp *)(src)->swatch)[n+1].rgba.mbr)
+# define INTERPC16(tp,mbr,targ,src,fr,n) (*((tp **)(targ)))->rgba.mbr = interpolate_S1(((tp *)(src)->swatch)[n].rgba.mbr,fr,((tp *)(src)->swatch)[n+1].rgba.mbr)
+
   switch( w->space ) {
   case LCH:
     ALLOCO(*((BaseI **)(output)),BaseI,1);
@@ -492,8 +564,6 @@ int initialize_wheel(Wheel ** w,
   (*w)->space = space;
   switch (space) {
   case LCH:
-    fprintf(stderr,"Initialize wheel: lch\n");
-    fflush(stderr);
     ALLOCSW(w,BaseI,n);
     dupe_i_n((BaseI *)((*w)->swatch), (BaseI *)(swatches), n);
     break;

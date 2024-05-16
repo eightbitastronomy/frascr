@@ -12,11 +12,11 @@
         ]
     },
     "canvas": {
-        "bottom": 0.4,
-        "realheight": 0.4,
+        "bottom": 0.5,
+        "realheight": 0.3,
         "pixelheight": 1600,
-        "left":-0.2,
-        "realwidth": 0.4,
+        "left":-0.15,
+        "realwidth": 0.3,
         "pixelwidth": 1600,
         "offset_Re": 0.0,
         "offset_Im": 0.0,

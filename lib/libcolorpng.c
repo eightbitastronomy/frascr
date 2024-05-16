@@ -6,9 +6,10 @@
 /*   provided via color library shared object.                              */
 /*  Last updated: 2024 May                                                  */
 /****************************************************************************/
-/* NEEDS: o  completion of 16-bit channel implementation                    */
+/* NEEDS: o  16-bit channel implementation gives wrong colors               */
+/*           - I've unit-tested the color.c library calls as well as the    */
+/*             bytecopy. 99.9% sure the problem lies in how I call libpng   */
 /*        o  possibly, to handle sampling palettes, since I started them    */
-/*        o  Hence, needs color lib and frascr to be updated as well!       */
 /****************************************************************************/
 /*  Author: Miguel Abele                                                    */
 /*  Copyrighted by Miguel Abele, 2024.                                      */
@@ -49,6 +50,15 @@
 #define MAX_INT        ((unsigned int)~(0)) 
 
 
+static inline void bytecopy(void * destn, void * const source, const int sz) {
+  int i;
+  unsigned char * dest = destn;
+  unsigned char * src = source;
+  for (i=0; i<sz; i++) {
+    *(dest + i) = *(src + i);
+  }
+}
+
 
 static inline uint32 find_max_intensity(Datum ** const dat,
 					   const int rows,
@@ -81,7 +91,6 @@ void FINISH(CanvasOpts * opts,
   uint32 max_uint32 = MAX_INT;
   Datum ** canvas = dataa[0];
   FILE * output = filea[0];
-  unsigned int ** storage = NULL;
   uint32 intensitymax;
   uint16 storeval;
   double storevald;
@@ -89,16 +98,19 @@ void FINISH(CanvasOpts * opts,
   png_structp pngptr = NULL;
   png_infop infoptr = NULL;
   png_text * textptr = NULL;
+  png_color_8 sig_bit;
   const int textfields = 3;
   char texttmp[511];
-  int datasize = sizeof(BaseC8);
+  int datasize;
   Wheel * colors = NULL;
   BaseI basecolor;
   BaseC8 converted;
   void * swatchI;
   BaseD swatchluv;
   BaseD swatchxyz;
-  BaseC8 swatchrgb;
+  png_byte ** rows;
+  void * swatchrgb;
+  int (*convertptr)(void *, BaseD *, unsigned short) = NULL;
 
   max = (datal <= filel ? datal : filel);
 
@@ -137,6 +149,12 @@ void FINISH(CanvasOpts * opts,
 		 PNG_COLOR_TYPE_RGB_ALPHA, PNG_INTERLACE_NONE,
 		 PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 
+    /*sig_bit.red = opts->visuals.depth;
+    sig_bit.green = opts->visuals.depth;
+    sig_bit.blue = opts->visuals.depth;
+    sig_bit.alpha = opts->visuals.depth;
+    png_set_sBIT(pngptr, infoptr, &sig_bit);*/
+    
     /* set text fields -- this section isn't working the way I want it to */
     
     textptr = malloc(sizeof(png_text)*textfields);
@@ -176,30 +194,39 @@ void FINISH(CanvasOpts * opts,
     
     /* transpose input data for libpng while converting from black & white to color */
 
-    storage = malloc(sizeof(unsigned int *)*opts->nheight);
-    for (i=0; i<opts->nheight; i++)
-      storage[i] = malloc(sizeof(unsigned int)*opts->nwidth);
-    png_byte ** rows = malloc(sizeof(png_byte *)*opts->nheight);
+    rows = malloc(sizeof(png_byte *)*opts->nheight);
+    if (opts->visuals.depth == 8) {
+      convertptr = convert_xyz_to_sRGB8;
+      datasize = sizeof(BaseC8);\
+      swatchrgb = malloc(sizeof(datasize));
+      for (i=0; i<opts->nheight; i++)
+	rows[i] = malloc(sizeof(png_byte)*opts->nwidth*datasize);
+    } else {
+      convertptr = convert_xyz_to_sRGB16;
+      datasize = sizeof(BaseC16);
+      swatchrgb = malloc(sizeof(datasize));
+      for (i=0; i<opts->nheight; i++) 
+	rows[i] = malloc(sizeof(png_uint_16)*opts->nwidth*datasize);
+    }
     for (i=0; i<opts->nheight; i++) {
-      rows[i] = (png_byte *)(storage[i]);
       for (j=0; j<opts->nwidth; j++) {
-	/* pass intensity to from_intensity_to_color(), store sRGB as an integer in storeval */
-        //storevald = (double)(canvas[j][i].n) / (double)(opts->escape);
 	storevald = intensitymax == 0 ? 0.0 : (double)(canvas[j][i].n) / (double)(intensitymax);
 	linear_by_intensity_norm(colors, storevald, &swatchI);
 	convert_lch_to_lab(&swatchluv, (BaseI *)swatchI);
 	convert_lab_to_xyz(&swatchxyz, &swatchluv);
-	convert_xyz_to_sRGB8(&swatchrgb, &swatchxyz, (unsigned char)(MAX_SHORT));
-	//storage[i][j] = swatchrgb.word;
-	storage[opts->nheight-i-1][j] = swatchrgb.word; //must adjust i or png will be upside down
-	// NEED A SWITCH HERE?, BECAUSE SWATCH CAN BE OF VARIOUS TYPES!!!!
+	convertptr(swatchrgb, &swatchxyz, max_uint16);
+	//Next line was the original, before BaseC8 & BaseC16 required swatchrgb to be void * ptr
+	//storage[opts->nheight-i-1][j] = swatchrgb.word; 
+	//is there a performance gain by using memcpy instead?
+	bytecopy(&(rows[opts->nheight-i-1][datasize*j]), swatchrgb, datasize);
+	//memcpy(&(rows[opts->nheight-i-1][datasize*j]), swatchrgb, datasize); 
 	free((BaseI *)swatchI);
       }
     }
 
     png_write_info(pngptr, infoptr);
     png_set_rows(pngptr, infoptr, rows);  
-    
+
     /* Write/Output */
     
     png_write_png(pngptr, infoptr, PNG_TRANSFORM_IDENTITY, NULL);
@@ -208,16 +235,13 @@ void FINISH(CanvasOpts * opts,
 
     /* Cleanup */
     png_destroy_write_struct(&pngptr, &infoptr);
-    if (storage) {
+    if (swatchrgb)
+      free(swatchrgb);
+    if (rows) {
       for (i=0; i<opts->nheight; i++)
-	if (storage[i]) {
-	  free(storage[i]);
-	  storage[i] = NULL;
-	}
-      free(storage);
-    }
-    if (rows)
+	free(rows[i]);
       free(rows);
+    }
     destroy_wheel(&colors);
     if (textptr)
       free(textptr);

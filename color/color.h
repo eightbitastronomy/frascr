@@ -69,6 +69,7 @@ typedef enum swatch_generation SwatchGenMode;
 typedef unsigned char uint8;
 typedef unsigned short uint16;
 typedef unsigned int uint32;
+typedef unsigned long uint64;
 typedef double float64;
 
 
@@ -115,10 +116,20 @@ union palette_base_char_16 {
     uint16 b;
     uint16 alpha;
   } rgba;
-  uint32 word[2];
+  uint64 word;
 };
 typedef union palette_base_char_16 BaseC16;
 
+/*union palette_base_char_16 {
+  struct {
+    uint16 r;
+    uint16 g;
+    uint16 b;
+    uint16 alpha;
+  } rgba;
+  uint32 word[2];
+};
+typedef union palette_base_char_16 BaseC16;*/
 
 
 int initialize_wheel(Wheel ** w,
@@ -153,7 +164,9 @@ int convert_luv_to_xyz_1(BaseD * bxyz, BaseD * bluv);
 
 int convert_xyz_to_sRGB8_old(BaseC8 * brgb, BaseD * bxyz, unsigned char alpha);
 
-int convert_xyz_to_sRGB8(BaseC8 * brgb, BaseD * bxyz, unsigned char alpha);
+int convert_xyz_to_sRGB8(void * voidrgb, BaseD * bxyz, uint16 alpha);
+
+int convert_xyz_to_sRGB16(void * voidrgb, BaseD * bxyz, uint16 alpha);
 
 int convert_xyz_to_RGB8(BaseC8 * brgb, BaseD * bxyz, unsigned char alpha);
 
