@@ -366,6 +366,7 @@ int convert_xyz_to_sRGB16(void * voidrgb,
   double y = bxyz->b;
   double z = bxyz->c;
   double r;
+  uint16 buffer;
 
   if ((bxyz==NULL) || (brgb==NULL))
     return -1;
@@ -377,7 +378,7 @@ int convert_xyz_to_sRGB16(void * voidrgb,
     r = 0.0;
   } else if ( r > 1.0 ) {
     r = 0.9999;
-  } 
+  }
   brgb->rgba.r = (uint16)((uint32)(65535.0*r));
 
   /* G */

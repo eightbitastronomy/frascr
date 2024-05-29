@@ -31,7 +31,7 @@ The framework of the project itself has so few constraints that you can use it t
  - contact me if you have questions or issues
 
 ## Issues:
- - [ ]  16-bit sRGB output is whack. Working on it.
+ - [ ]  16-bit sRGB output is whack. Giving up on this problem after many fruitless attempts.
 
 ## For the future:
  - [ ]  Expand the color library into something more independent and fully-functioning

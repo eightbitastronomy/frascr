@@ -57,6 +57,9 @@ static inline void bytecopy(void * destn, void * const source, const int sz) {
   for (i=0; i<sz; i++) {
     *(dest + i) = *(src + i);
   }
+  /*for (i=0; i<sz; i++) 
+    if (i % 2 == 0)
+    *(dest + i/2) = *(src + i);*/
 }
 
 
@@ -206,8 +209,16 @@ void FINISH(CanvasOpts * opts,
       datasize = sizeof(BaseC16);
       swatchrgb = malloc(sizeof(datasize));
       for (i=0; i<opts->nheight; i++) 
-	rows[i] = malloc(sizeof(png_uint_16)*opts->nwidth*datasize);
+	rows[i] = malloc(sizeof(png_byte)*opts->nwidth*datasize);
     }
+
+    /* Here, something goes wrong. 29 May 2024: After posting the issue on pnggroup's libpng github page,
+       I'm told that somehow my data gets garbled or something in the 16-bit output. They quickly ruled
+       out a bug in their library. I find that the converted data is okay. So somehow, as I already
+       suspected, the problem must lie either in how I write to the rows array, or in how libpng reads
+       the rows array. However, attempts to modify how libpng reads rows have not proved helpful.
+     */
+
     for (i=0; i<opts->nheight; i++) {
       for (j=0; j<opts->nwidth; j++) {
 	storevald = intensitymax == 0 ? 0.0 : (double)(canvas[j][i].n) / (double)(intensitymax);
@@ -217,9 +228,16 @@ void FINISH(CanvasOpts * opts,
 	convertptr(swatchrgb, &swatchxyz, max_uint16);
 	//Next line was the original, before BaseC8 & BaseC16 required swatchrgb to be void * ptr
 	//storage[opts->nheight-i-1][j] = swatchrgb.word; 
-	//is there a performance gain by using memcpy instead?
-	bytecopy(&(rows[opts->nheight-i-1][datasize*j]), swatchrgb, datasize);
-	//memcpy(&(rows[opts->nheight-i-1][datasize*j]), swatchrgb, datasize); 
+	//Bytecopy was written so that I could manipulate the bytes of data to help debug.
+	//bytecopy(&(rows[opts->nheight-i-1][datasize*j]), swatchrgb, datasize); //use 8 for last arg for upper-8
+	/* Debug printing. Fucking hell. 
+	  if (opts->visuals.depth == 8) {
+	  fprintf(stderr,"%d %d:  (%d)   %d %d %d %d   ..   %04x %04x %04x %04x\n",opts->nheight-i-1,j,storevald,((BaseC8 *)swatchrgb)->rgba.r,((BaseC8 *)swatchrgb)->rgba.g,((BaseC8 *)swatchrgb)->rgba.b,((BaseC8 *)swatchrgb)->rgba.alpha,((BaseC8 *)swatchrgb)->rgba.r,((BaseC8 *)swatchrgb)->rgba.g,((BaseC8 *)swatchrgb)->rgba.b,((BaseC8 *)swatchrgb)->rgba.alpha);
+	} else {
+	  fprintf(stderr,"%d %d:  (%d)   %d %d %d %d   ..   %04x %04x %04x %04x\n",opts->nheight-i-1,j,storevald,((BaseC16 *)swatchrgb)->rgba.r,((BaseC16 *)swatchrgb)->rgba.g,((BaseC16 *)swatchrgb)->rgba.b,((BaseC16 *)swatchrgb)->rgba.alpha,((BaseC16 *)swatchrgb)->rgba.r,((BaseC16 *)swatchrgb)->rgba.g,((BaseC16 *)swatchrgb)->rgba.b,((BaseC16 *)swatchrgb)->rgba.alpha);
+	}
+	*/
+	memcpy(&(rows[opts->nheight-i-1][datasize*j]), swatchrgb, datasize); 
 	free((BaseI *)swatchI);
       }
     }
@@ -232,6 +250,10 @@ void FINISH(CanvasOpts * opts,
     png_write_png(pngptr, infoptr, PNG_TRANSFORM_IDENTITY, NULL);
     png_write_image(pngptr, rows);
     png_write_end(pngptr, infoptr);
+
+    // Apparently pnggroup tells me that weird data appears after IEND in the file. How is that even
+    // possible? If I've miswritten data to the rows array, why would that cause libpng to completely
+    // botch the job? Fucking hell. 29 May 2024
 
     /* Cleanup */
     png_destroy_write_struct(&pngptr, &infoptr);

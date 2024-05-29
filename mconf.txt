@@ -28,7 +28,7 @@
     },
     "visualization": {
     	"compression": 1,
-	"channeldepth": 8,
+	"channeldepth": 16,
 	"colorization": {
         	"space": "lch",	
 		"algorithm": {
