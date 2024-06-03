@@ -4,12 +4,9 @@
 /*   FINISH (currently) outputs sRGB png files by mapping unsigned int data */
 /*   using a user-provided color palette (LCH/CIELAB, linear interpolation  */
 /*   provided via color library shared object.                              */
-/*  Last updated: 2024 May                                                  */
+/*  Last updated: 2024 June                                                 */
 /****************************************************************************/
-/* NEEDS: o  16-bit channel implementation gives wrong colors               */
-/*           - I've unit-tested the color.c library calls as well as the    */
-/*             bytecopy. 99.9% sure the problem lies in how I call libpng   */
-/*        o  possibly, to handle sampling palettes, since I started them    */
+/* NEEDS: o  possibly, to handle sampling palettes, since I started them    */
 /****************************************************************************/
 /*  Author: Miguel Abele                                                    */
 /*  Copyrighted by Miguel Abele, 2024.                                      */
@@ -38,6 +35,7 @@
 #include "options.h"
 #include "utils.h"
 #include "color.h"
+#include "bitorder.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -50,16 +48,25 @@
 #define MAX_INT        ((unsigned int)~(0)) 
 
 
-static inline void bytecopy(void * destn, void * const source, const int sz) {
+static inline void * byte_n_switch_16(void * destn, const void * source, size_t sz) {
   int i;
   unsigned char * dest = destn;
-  unsigned char * src = source;
-  for (i=0; i<sz; i++) {
-    *(dest + i) = *(src + i);
-  }
+  const unsigned char * src = source;
+  //for (i=0; i<sz; i++) {
+  //  *(dest + i) = *(src + i);
+  //}
   /*for (i=0; i<sz; i++) 
     if (i % 2 == 0)
     *(dest + i/2) = *(src + i);*/
+  *(dest) = *(src + 1);
+  *(dest + 1) = *(src);
+  *(dest + 2) = *(src + 3);
+  *(dest + 3) = *(src + 2);
+  *(dest + 4) = *(src + 5);
+  *(dest + 5) = *(src + 6);
+  *(dest + 6) = *(src + 6);
+  *(dest + 7) = *(src + 7);
+  return NULL;
 }
 
 
@@ -114,7 +121,8 @@ void FINISH(CanvasOpts * opts,
   png_byte ** rows;
   void * swatchrgb;
   int (*convertptr)(void *, BaseD *, unsigned short) = NULL;
-
+  void *(*bytecopy)(void *, const void *, size_t);
+  
   max = (datal <= filel ? datal : filel);
 
   for (rno=0; rno<max; rno++) {
@@ -159,7 +167,7 @@ void FINISH(CanvasOpts * opts,
     png_set_sBIT(pngptr, infoptr, &sig_bit);*/
     
     /* set text fields -- this section isn't working the way I want it to */
-    
+
     textptr = malloc(sizeof(png_text)*textfields);
     if (textptr) {
       textptr[0].compression = PNG_TEXT_COMPRESSION_NONE;
@@ -178,7 +186,7 @@ void FINISH(CanvasOpts * opts,
       textptr[2].text_length = strlen(textptr[2].text);
       textptr[2].lang = NULL;
       png_set_text(pngptr, infoptr, textptr, textfields);
-    }
+      }
     
     /* Create a LCH color wheel. */
 
@@ -200,6 +208,7 @@ void FINISH(CanvasOpts * opts,
     rows = malloc(sizeof(png_byte *)*opts->nheight);
     if (opts->visuals.depth == 8) {
       convertptr = convert_xyz_to_sRGB8;
+      bytecopy = memcpy;
       datasize = sizeof(BaseC8);\
       swatchrgb = malloc(sizeof(datasize));
       for (i=0; i<opts->nheight; i++)
@@ -210,14 +219,18 @@ void FINISH(CanvasOpts * opts,
       swatchrgb = malloc(sizeof(datasize));
       for (i=0; i<opts->nheight; i++) 
 	rows[i] = malloc(sizeof(png_byte)*opts->nwidth*datasize);
-    }
+      switch (O32_HOST_ORDER) {
+      case O32_LITTLE_ENDIAN:
+	bytecopy = byte_n_switch_16;
+	break;
+      case O32_BIG_ENDIAN:
+	bytecopy = memcpy;
+	break;
+      default:
+	return; //I'm not handling PDP or HONEYWELL at the moment
+      }
 
-    /* Here, something goes wrong. 29 May 2024: After posting the issue on pnggroup's libpng github page,
-       I'm told that somehow my data gets garbled or something in the 16-bit output. They quickly ruled
-       out a bug in their library. I find that the converted data is okay. So somehow, as I already
-       suspected, the problem must lie either in how I write to the rows array, or in how libpng reads
-       the rows array. However, attempts to modify how libpng reads rows have not proved helpful.
-     */
+    }
 
     for (i=0; i<opts->nheight; i++) {
       for (j=0; j<opts->nwidth; j++) {
@@ -227,17 +240,8 @@ void FINISH(CanvasOpts * opts,
 	convert_lab_to_xyz(&swatchxyz, &swatchluv);
 	convertptr(swatchrgb, &swatchxyz, max_uint16);
 	//Next line was the original, before BaseC8 & BaseC16 required swatchrgb to be void * ptr
-	//storage[opts->nheight-i-1][j] = swatchrgb.word; 
-	//Bytecopy was written so that I could manipulate the bytes of data to help debug.
-	//bytecopy(&(rows[opts->nheight-i-1][datasize*j]), swatchrgb, datasize); //use 8 for last arg for upper-8
-	/* Debug printing. Fucking hell. 
-	  if (opts->visuals.depth == 8) {
-	  fprintf(stderr,"%d %d:  (%d)   %d %d %d %d   ..   %04x %04x %04x %04x\n",opts->nheight-i-1,j,storevald,((BaseC8 *)swatchrgb)->rgba.r,((BaseC8 *)swatchrgb)->rgba.g,((BaseC8 *)swatchrgb)->rgba.b,((BaseC8 *)swatchrgb)->rgba.alpha,((BaseC8 *)swatchrgb)->rgba.r,((BaseC8 *)swatchrgb)->rgba.g,((BaseC8 *)swatchrgb)->rgba.b,((BaseC8 *)swatchrgb)->rgba.alpha);
-	} else {
-	  fprintf(stderr,"%d %d:  (%d)   %d %d %d %d   ..   %04x %04x %04x %04x\n",opts->nheight-i-1,j,storevald,((BaseC16 *)swatchrgb)->rgba.r,((BaseC16 *)swatchrgb)->rgba.g,((BaseC16 *)swatchrgb)->rgba.b,((BaseC16 *)swatchrgb)->rgba.alpha,((BaseC16 *)swatchrgb)->rgba.r,((BaseC16 *)swatchrgb)->rgba.g,((BaseC16 *)swatchrgb)->rgba.b,((BaseC16 *)swatchrgb)->rgba.alpha);
-	}
-	*/
-	memcpy(&(rows[opts->nheight-i-1][datasize*j]), swatchrgb, datasize); 
+	//storage[opts->nheight-i-1][j] = swatchrgb.word;
+	bytecopy(&(rows[opts->nheight-i-1][datasize*j]), swatchrgb, datasize);
 	free((BaseI *)swatchI);
       }
     }
@@ -250,10 +254,6 @@ void FINISH(CanvasOpts * opts,
     png_write_png(pngptr, infoptr, PNG_TRANSFORM_IDENTITY, NULL);
     png_write_image(pngptr, rows);
     png_write_end(pngptr, infoptr);
-
-    // Apparently pnggroup tells me that weird data appears after IEND in the file. How is that even
-    // possible? If I've miswritten data to the rows array, why would that cause libpng to completely
-    // botch the job? Fucking hell. 29 May 2024
 
     /* Cleanup */
     png_destroy_write_struct(&pngptr, &infoptr);

@@ -15,23 +15,23 @@ The framework of the project itself has so few constraints that you can use it t
 
 ## Current functionality
  -  Command-line argument processing OR json-based configuration file processing
+ -  NB: command-line args only offer a little flexibility; use a json config file instead
  -  Mandelbrot set calculation for a quadratic function
- -  png output in either black & white (more useful than it might seem) or in 8-bit hue-shift color
+ -  png output in either black & white (more useful than it might seem)
+ -  png output in 8-bit or 16-bit hue-shift color
  -  output in text only, but that's nothing to write home about
 
 ## Dependencies / level of neediness:
+ - C99 due to use of stdint.h  
  - cmake build system
- - libpng
+ - libpng 1.6.40 or higher, I think
  - zlib
  - json-c
  - and patience
  
 ## Installation and configuration:
- -  No installation. Download, cd into build, run "cmake ..", then "cmake --build .". Your executable will be "frascr". Take a look at the config fileis in the source or use "frascr -h" to get an idea of how to run it.
+ -  No installation. Download, cd into build, run "cmake ..", then "cmake --build .". Your executable will be "frascr". Take a look at the config files in the source or use "frascr -h" to get an idea of how to run it.
  - contact me if you have questions or issues
-
-## Issues:
- - [ ]  16-bit sRGB output is whack. Giving up on this problem after many fruitless attempts.
 
 ## For the future:
  - [ ]  Expand the color library into something more independent and fully-functioning
@@ -40,4 +40,4 @@ The framework of the project itself has so few constraints that you can use it t
 ## Contact / Info:
 Author: Miguel Abele
 Contact: eightbitastronomy@protonmail.com
-License: see file, LICENSE, provided with source code.
+License: see file, LICENSE, provided with source code. File bitorder.h has no licensing and is free to use.
