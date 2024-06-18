@@ -34,10 +34,14 @@ The framework of the project itself has so few constraints that you can use it t
  - contact me if you have questions or issues
 
 ## For the future:
- - [ ]  Expand the color library into something more independent and fully-functioning
+ - [ ]  Expand the color library into something more independent and fully-functioning (WIP)
+ - [ ]  Make a libcolorpng that uses GPU for the color conversions & interpolation
  - [ ]  The sky's the limit
 
 ## Contact / Info:
 Author: Miguel Abele
 Contact: eightbitastronomy@protonmail.com
-License: see file, LICENSE, provided with source code. File bitorder.h has no licensing and is free to use.
+License:
+ - see file, LICENSE, provided with source code.
+ - File bitorder.h has no licensing and is free to use.
+ - see color library files for info on data/equations not copyrightable by me, some of which appearing to be in the public domain.

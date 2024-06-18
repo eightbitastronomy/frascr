@@ -7,10 +7,13 @@
 /*   moving over to sRGB.                                                   */
 /*   Some of the algorithms implemented here follow work found online. A    */
 /*   URL has been provided below.                                           */
-/*   Last updated 2024 May                                                  */
+/*   Last updated 2024 June                                                 */
 /****************************************************************************/
 /*  Author: Miguel Abele                                                    */
 /*  Copyrighted by Miguel Abele, 2024.                                      */
+/*  Contains mathematical and empirical results for which the               */
+/*  intellectual rights belong to the respective authors. I have tried to   */
+/*  adequately cite their work based on the information available to me.    */
 /*                                                                          */
 /*  License information:                                                    */
 /*                                                                          */
@@ -228,7 +231,6 @@ SwatchGenMode mode_to_mode(const char * const mode)
     return LINEAR;
   return OTHER;
 }
-
 
 
 int convert_lch_to_lab(BaseD * blab, BaseI * blch)
