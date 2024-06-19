@@ -43,6 +43,16 @@
 #include "numtype.h"
 
 
+enum reference_value_type {
+  D65_2DEG,
+  D65_10DEG,
+  D50_2DEG,
+  D50_10DEG,
+  UNKNOWN
+};
+typedef enum reference_value_type RefType;
+
+
 struct standard_illuminant_values {
   float64 tristimx, tristimy, tristimz;
   float64 coordx, coordy;
@@ -65,14 +75,15 @@ struct reference_value_holder {
 typedef struct reference_value_holder RefValues;
 
 
+RefType illum_to_illum(const char * type);
 
-void std_illuminant_for_2deg_D65(RefValues *rv);
+void std_illuminant_for_D65_2deg(RefValues *rv);
 
-void std_illuminant_for_10deg_D65(RefValues *rv);
+void std_illuminant_for_D65_10deg(RefValues *rv);
 
-void std_illuminant_for_2deg_D50(RefValues *rv);
+void std_illuminant_for_D50_2deg(RefValues *rv);
 
-void std_illuminant_for_10deg_D50(RefValues *rv);
+void std_illuminant_for_D50_10deg(RefValues *rv);
 
 void matrix_for_XYZ_sRGB_D65(RefValues *rv);
 

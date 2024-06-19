@@ -37,6 +37,21 @@
 
 
 #include "reference.h"
+#include <string.h>
+
+
+RefType illum_to_illum(const char * type)
+{
+  if (strcmp("D65 2deg", type) == 0)
+    return D65_2DEG;
+  if (strcmp("D65 10deg", type) == 0)
+    return D65_10DEG;
+  if (strcmp("D50 2deg", type) == 0)
+    return D50_2DEG;
+  if (strcmp("D50 10deg", type) == 0)
+    return D50_10DEG;
+  return UNKNOWN;
+}
 
 
 /* in the following standard-illuminant and matrix setting functions,
@@ -57,7 +72,7 @@
    (Can't access at this time without paying) */
 
 
-void std_illuminant_for_2deg_D65(RefValues *rv) {
+void std_illuminant_for_D65_2deg(RefValues *rv) {
   /* not sure the source for these */
   rv->white.tristimx = 0.950489;
   rv->white.tristimy = 1.0;
@@ -68,7 +83,7 @@ void std_illuminant_for_2deg_D65(RefValues *rv) {
 }
 
 
-void std_illuminant_for_10deg_D65(RefValues *rv) {
+void std_illuminant_for_D65_10deg(RefValues *rv) {
   /* from https://en.wikipedia.org/wiki/Standard_illuminant */
   rv->white.tristimx = 0.94811;
   rv->white.tristimy = 1.0;
@@ -79,7 +94,7 @@ void std_illuminant_for_10deg_D65(RefValues *rv) {
 }
 
 
-void std_illuminant_for_2deg_D50(RefValues *rv) {
+void std_illuminant_for_D50_2deg(RefValues *rv) {
   /* from https://www.color.org/sRGB.pdf (sRGB_for_ICC_profiles.pdf) */
   rv->white.tristimx = 0.9642;
   rv->white.tristimy = 1.0;
@@ -90,7 +105,7 @@ void std_illuminant_for_2deg_D50(RefValues *rv) {
 }
 
 
-void std_illuminant_for_10deg_D50(RefValues *rv) {
+void std_illuminant_for_D50_10deg(RefValues *rv) {
   /* NEED! (if they exist) */
   rv->white.tristimx = 0.;
   rv->white.tristimy = 0.;

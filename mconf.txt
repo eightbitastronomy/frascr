@@ -12,12 +12,12 @@
         ]
     },
     "canvas": {
-        "bottom": 0.5,
-        "realheight": 0.3,
-        "pixelheight": 1600,
-        "left":-0.15,
-        "realwidth": 0.3,
-        "pixelwidth": 1600,
+        "bottom": 0.55,
+        "realheight": 0.2,
+        "pixelheight": 100,
+        "left":-0.10,
+        "realwidth": 0.2,
+        "pixelwidth": 100,
         "offset_Re": 0.0,
         "offset_Im": 0.0,
         "escape": 200,
@@ -46,7 +46,8 @@
                  		"caxisb": 75,	
                  		"caxisc": 312
              		}
-        	]
+        	],
+		"illuminant": "D65 2deg"
     	}
     }
 }

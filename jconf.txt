@@ -41,7 +41,8 @@
                  	 "caxisb": 75,	
                  	 "caxisc": 312
              	     }
-        	]
+        	],
+		"illuminant": "D65 2deg"
 	}
     }
 }

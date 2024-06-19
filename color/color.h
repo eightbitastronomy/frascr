@@ -155,17 +155,17 @@ int convert_lch_to_lab(BaseD * bluv, BaseI * blch);
 
 int convert_lab_to_xyz_old(BaseD * bxyz, BaseD * blab);
 
-int convert_lab_to_xyz(BaseD * bxyz, BaseD * blab);
-  
-int convert_luv_to_xyz(BaseD * bxyz, BaseD * bluv);
+int convert_lab_to_xyz(BaseD * bxyz, BaseD * blab, RefValues * ref);
 
-int convert_luv_to_xyz_1(BaseD * bxyz, BaseD * bluv);
+int convert_luv_to_xyz(BaseD * bxyz, BaseD * bluv, RefValues * ref);
+
+int convert_luv_to_xyz_alt(BaseD * bxyz, BaseD * bluv);
 
 int convert_xyz_to_sRGB8_old(BaseC8 * brgb, BaseD * bxyz, unsigned char alpha);
 
-int convert_xyz_to_sRGB8(void * voidrgb, BaseD * bxyz, uint16 alpha);
+int convert_xyz_to_sRGB8(void * voidrgb, BaseD * bxyz, uint16 alpha, RefValues * ref);
 
-int convert_xyz_to_sRGB16(void * voidrgb, BaseD * bxyz, uint16 alpha);
+int convert_xyz_to_sRGB16(void * voidrgb, BaseD * bxyz, uint16 alpha, RefValues * ref);
 
 int convert_xyz_to_RGB8(BaseC8 * brgb, BaseD * bxyz, unsigned char alpha);
 

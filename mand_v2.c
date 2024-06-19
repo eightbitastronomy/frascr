@@ -44,8 +44,48 @@
 #include "libopen.h"
 
 
+void error_switcher(int e, DParam * debug)
+{
+      switch (e) {
+      case OPT_BAD_CALL:
+	DEBUG(debug, D0, "frascr::main: option processing encountered error: coder was careless with function call\n", e);
+	break;
+      case OPT_BAD_OPTION:
+	DEBUG(debug, D0, "frascr::main: option processing encountered error: invalid command-line option used\n", e);
+	break;
+      case OPT_TOO_FEW:
+	DEBUG(debug, D0, "frascr::main: option processing encountered error: too few command-line arguments not associated with switches\n", e);
+	break;
+      case OPT_CONF_JSON:
+	DEBUG(debug, D0, "frascr::main: option processing encountered error: configuration file, incorrectly formatted or missing necessary information\n", e);
+	break;
+      case OPT_CONF_FILES:
+	DEBUG(debug, D0, "frascr::main: option processing encountered error: configuration file, error in output-file information\n", e);
+	break;
+      case OPT_CONF_CANV:
+	DEBUG(debug, D0, "frascr::main: option processing encountered error: configuration file, missing / error in canvas options\n", e);
+	break;
+      case OPT_CONF_MALLOC:
+	DEBUG(debug, D0, "frascr::main: option processing encountered error: configuration file, unable to allocate memory\n", e);
+	break;
+      case OPT_CONF_N_MISMATCH:
+	DEBUG(debug, D0, "frascr::main: option processing encountered error: configuration file, number of color swatches does not match stated number 'n'\n", e);
+	break;
+      case OPT_CONF_CLR_SPACE:
+	DEBUG(debug, D0, "frascr::main: option processing encountered error: configuration file, unknown / error in color space\n", e);
+	break;
+      case OPT_CONF_CLR_REF:
+	DEBUG(debug, D0, "frascr::main: option processing encountered error: configuration file, missing / error in color reference (illuminant) options\n", e);
+	break;
+      default:
+	DEBUG(debug, D0, "frascr::main: option processing encountered error %d: unknown\n", e);
+	break;
+      }
+}
 
-int main(int argc, char ** argv) {
+
+int main(int argc, char ** argv)
+{
 
   uint32 i,j;
   int retbuf;
@@ -66,20 +106,7 @@ int main(int argc, char ** argv) {
     retbuf = process_options(&general, &palette, &debug, argc, argv);
 
     if (retbuf) {
-      switch (retbuf) {
-      case OPT_BAD_CALL:
-	DEBUG(&debug, D0, "frascr::main: option processing encountered error: coder was careless with function call\n", retbuf);
-	break;
-      case OPT_BAD_OPTION:
-	DEBUG(&debug, D0, "frascr::main: option processing encountered error: invalid command-line option used\n", retbuf);
-	break;
-      case OPT_TOO_FEW:
-	DEBUG(&debug, D0, "frascr::main: option processing encountered error: too few command-line arguments not associated with switches\n", retbuf);
-	break;
-      default:
-	DEBUG(&debug, D0, "frascr::main: option processing encountered error %d: unknown\n", retbuf);
-	break;
-      }
+      error_switcher(retbuf, &debug);
       HELP_FOR_OPTIONS(debug.out);
       return EXIT_SUCCESS;
     } else {

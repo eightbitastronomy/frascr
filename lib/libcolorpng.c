@@ -89,6 +89,32 @@ static inline uint32 find_max_intensity(Datum ** const dat,
 }
 
 
+static inline uint32 prepare_color_reference(RefType type,
+					     RefValues * refholder)
+{
+  switch(type) {
+  case D65_2DEG:
+    std_illuminant_for_D65_2deg(refholder);
+    matrix_for_XYZ_sRGB_D65(refholder);
+    return 0;
+  case D65_10DEG:
+    std_illuminant_for_D65_10deg(refholder);
+    matrix_for_XYZ_sRGB_D65(refholder);
+    return 0;
+  case D50_2DEG:
+    std_illuminant_for_D50_2deg(refholder);
+    matrix_for_XYZ_wgRGB_D50(refholder);
+    return 0;
+  case D50_10DEG:
+    std_illuminant_for_D50_10deg(refholder);
+    matrix_for_XYZ_wgRGB_D50(refholder);
+    return 0;
+  default:
+    return 1;
+  }
+}
+
+
 void FINISH(CanvasOpts * opts,
 	    Datum *** dataa,
 	    int datal,
@@ -96,14 +122,13 @@ void FINISH(CanvasOpts * opts,
 	    int filel)
 {
   int i, j, k, ret;
+
+  /* Data & control variables */
   int max, rno;
-  uint16 max_uint16 = MAX_SHORT; /* see below */
-  uint32 max_uint32 = MAX_INT;
   Datum ** canvas = dataa[0];
   FILE * output = filea[0];
-  uint32 intensitymax;
-  uint16 storeval;
-  double storevald;
+  
+  /* libpng variables */ 
   png_voidp errorptr = NULL;
   png_structp pngptr = NULL;
   png_infop infoptr = NULL;
@@ -111,16 +136,28 @@ void FINISH(CanvasOpts * opts,
   png_color_8 sig_bit;
   const int textfields = 3;
   char texttmp[511];
-  int datasize;
+  png_byte ** rows;
+
+  /* Color conversion */
   Wheel * colors = NULL;
+  RefValues colorconvref;
   BaseI basecolor;
   BaseC8 converted;
   void * swatchI;
   BaseD swatchluv;
   BaseD swatchxyz;
-  png_byte ** rows;
   void * swatchrgb;
-  int (*convertptr)(void *, BaseD *, unsigned short) = NULL;
+
+  /* Color conversion helpers */
+  uint16 max_uint16 = MAX_SHORT; /* see below */
+  uint32 max_uint32 = MAX_INT;
+  uint32 intensitymax;
+  uint16 storeval;
+  double storevald;
+
+  /* Color-to-libpng helpers */
+  int datasize;
+  int (*convertptr)(void *, BaseD *, unsigned short, RefValues *) = NULL;
   void *(*bytecopy)(void *, const void *, size_t);
   
   max = (datal <= filel ? datal : filel);
@@ -199,6 +236,16 @@ void FINISH(CanvasOpts * opts,
       return;
     }
 
+    /* Prepare the reference values for color conversion */
+
+    if (prepare_color_reference(opts->visuals.colors->reference, &colorconvref)) {
+      png_destroy_write_struct(&pngptr, &infoptr);
+      destroy_wheel(&colors);
+      if (textptr)
+	free(textptr);
+      return;
+    }
+      
     /* find maximum intensity */
 
     intensitymax = find_max_intensity(canvas, opts->nwidth, opts->nheight);
@@ -237,8 +284,8 @@ void FINISH(CanvasOpts * opts,
 	storevald = intensitymax == 0 ? 0.0 : (double)(canvas[j][i].n) / (double)(intensitymax);
 	linear_by_intensity_norm(colors, storevald, &swatchI);
 	convert_lch_to_lab(&swatchluv, (BaseI *)swatchI);
-	convert_lab_to_xyz(&swatchxyz, &swatchluv);
-	convertptr(swatchrgb, &swatchxyz, max_uint16);
+	convert_lab_to_xyz(&swatchxyz, &swatchluv, &colorconvref);
+	convertptr(swatchrgb, &swatchxyz, max_uint16, &colorconvref);
 	//Next line was the original, before BaseC8 & BaseC16 required swatchrgb to be void * ptr
 	//storage[opts->nheight-i-1][j] = swatchrgb.word;
 	bytecopy(&(rows[opts->nheight-i-1][datasize*j]), swatchrgb, datasize);

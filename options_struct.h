@@ -49,6 +49,7 @@ typedef struct coreopts CoreOpts;
 struct coloropts {
   SwatchGenMode mode;
   ColorSpace space;
+  RefType reference;
   int swatch_n;
   void * swatch;
 };

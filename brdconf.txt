@@ -25,23 +25,28 @@
 		     0.0,
 	]
     },
-    "color": {
-        "space": "lch",
-        "algorithm": {
-	         "type": "linear",
-	         "n": 2
-	    },   
-        "swatches": [
-             {	 
-                 "caxisa": 90,	
-                 "caxisb": 75,	
-                 "caxisc": 48
-             },
-             {
-                 "caxisa": 10,	
-                 "caxisb": 75,	
-                 "caxisc": 312
-             }
-        ]
+    "visualization": {
+    "compression": 1,
+    "channeldepth": 16,
+    "colorization": {
+      	"space": "lch",	
+	"algorithm": {
+        	     "type": "linear",
+         	     "n": 2
+	},
+	"swatches": [
+       		{	 
+			 "caxisa": 90,	
+       	 		 "caxisb": 75,	
+                	 "caxisc": 48
+             	},
+             	{
+			"caxisa": 10,	
+                	"caxisb": 75,	
+                 	"caxisc": 312
+             	}
+        ],
+	"illuminant": "D65 2deg"
     }
+   }
 }

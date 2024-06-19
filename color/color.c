@@ -256,13 +256,56 @@ int convert_lch_to_lab(BaseD * blab, BaseI * blch)
 
 
 
+int convert_luv_to_xyz(BaseD * bxyz, BaseD * bluv, RefValues * ref)
+{
+  /* I think I got most of this conversion from wikipedia */
+  
+  /* XYZ tristimulus values for 2 deg observer and D65 */
+  //const double xr = 0.9505; //1.205; //illuminant E? //73000. for each for E
+  //const double yr = 1.0; //0.948;
+  //const double zr = 1.0890; //0.909;
+  const double kappa = 903.3;
+  double l, u, v, Y;
+  
+  
+  if ((bxyz==NULL) || (bluv==NULL))
+    return PW_BAD_CALL;
+
+  l = bluv->a;
+  u = bluv->b;
+  v = bluv->c;
+
+  //double vnought = 9.0*yr/(xr+15.0*yr+3.0*zr);
+  double vnought = 9.0*ref->white.tristimy/(ref->white.tristimx+15.0*ref->white.tristimy+3.0*ref->white.tristimz);
+  //double unought = 4.0*xr/(xr+15.0*yr+3.0*zr);
+  double unought = 4.0*ref->white.tristimx/(ref->white.tristimx+15.0*ref->white.tristimy+3.0*ref->white.tristimz);
+  double db = 39.0*l/(v + 13.0*l*vnought);
+  double ac = 52.0*l/(u + 13.0*l*unought)/3.0;
+
+  /* Y */
+  if (l <= 8.0) {
+    Y = l/kappa;
+  } else {
+    Y = pow((l+16.0)/116.0, 3.0);
+  }
+  bxyz->b = Y;
+  /* X */
+  bxyz->a = Y*db/ac;
+  /* Z */
+  bxyz->c = (bxyz->a)*(ac-1./3.)-5.0*Y;
+
+  return 0;
+}
+
+
+
 /* Based on https://mina86.com/2021/srgb-lab-lchab-conversions/ algorithm */
-int convert_lab_to_xyz(BaseD * bxyz, BaseD * blab)
+int convert_lab_to_xyz(BaseD * bxyz, BaseD * blab, RefValues * ref)
 {
   /* D65 values */
-  const double Xn = 0.950489;//95.0489;//
-  const double Yn = 1.0;// 100.0;//
-  const double Zn = 1.088840;//108.8840;//
+  //const double Xn = 0.950489;//95.0489;//
+  //const double Yn = 1.0;// 100.0;//
+  //const double Zn = 1.088840;//108.8840;//
   const double kappa = 24389. / 27.;
   double buffer, r;
   
@@ -274,17 +317,20 @@ int convert_lab_to_xyz(BaseD * bxyz, BaseD * blab)
   buffer = r;
   /* X */
   r = buffer + blab->b/500.0;
-  bxyz->a = Xn*FINV(r);
+  //bxyz->a = Xn*FINV(r);
+  bxyz->a = ref->white.tristimx * FINV(r);
   /* Z */
   r = buffer - blab->c/200.0;
-  bxyz->c = Zn*FINV(r);
+  //bxyz->c = Zn*FINV(r);
+  bxyz->c = ref->white.tristimz * FINV(r);
   /* Y */
   if (buffer < 8.0) {
     buffer = pow(buffer, 3.0);
   } else {
     buffer = blab->a / kappa;
   }
-  bxyz->b = buffer;
+  //bxyz->b = buffer;
+  bxyz->b = ref->white.tristimy * buffer;
 
   return 0;
 }
@@ -293,9 +339,10 @@ int convert_lab_to_xyz(BaseD * bxyz, BaseD * blab)
 
 int convert_xyz_to_sRGB8(void * voidrgb,
 			 BaseD * bxyz,
-			 uint16 alpha)
+			 uint16 alpha,
+			 RefValues * ref)
 {
-  const double m11 = 3.2406;
+  /*const double m11 = 3.2406;
   const double m12 = -1.5372;
   const double m13 = -.4986;
   const double m21 = -.9689;
@@ -303,7 +350,7 @@ int convert_xyz_to_sRGB8(void * voidrgb,
   const double m23 = .0415;
   const double m31 = .0557;
   const double m32 = -.2040;
-  const double m33 = 1.0570;
+  const double m33 = 1.0570;*/
   BaseC8 * brgb = (BaseC8 *)voidrgb;
   double x = bxyz->a;
   double y = bxyz->b;
@@ -314,7 +361,8 @@ int convert_xyz_to_sRGB8(void * voidrgb,
     return -1;
 
   /* R */
-  r = x*m11 + y*m12 + z*m13;
+  //r = x*m11 + y*m12 + z*m13;
+  r = x*ref->matrix.m11 + y*ref->matrix.m12 + z*ref->matrix.m13;
   r = GAMMACORRECT(r);
   if (r < 0.0) {
     r = 0;
@@ -324,7 +372,8 @@ int convert_xyz_to_sRGB8(void * voidrgb,
   brgb->rgba.r = (uint8)((uint32)(255.0*r));
 
   /* G */
-  r = x*m21 + y*m22 + z*m23;
+  //r = x*m21 + y*m22 + z*m23;
+  r = x*ref->matrix.m21 + y*ref->matrix.m22 + z*ref->matrix.m23;
   r = GAMMACORRECT(r);
   if (r < 0.0) {
     r = 0;
@@ -334,7 +383,8 @@ int convert_xyz_to_sRGB8(void * voidrgb,
   brgb->rgba.g = (uint8)((uint32)(255.0*r));
 
   /* B */
-  r = x*m31 + y*m32 + z*m33;
+  //r = x*m31 + y*m32 + z*m33;
+  r = x*ref->matrix.m31 + y*ref->matrix.m32 + z*ref->matrix.m33;
   r = GAMMACORRECT(r);
   if (r < 0.0) {
     r = 0;
@@ -352,9 +402,10 @@ int convert_xyz_to_sRGB8(void * voidrgb,
 
 int convert_xyz_to_sRGB16(void * voidrgb,
 			  BaseD * bxyz,
-			  uint16 alpha)
+			  uint16 alpha,
+			  RefValues * ref)
 {
-  const double m11 = 3.2406;
+  /*const double m11 = 3.2406;
   const double m12 = -1.5372;
   const double m13 = -.4986;
   const double m21 = -.9689;
@@ -362,7 +413,7 @@ int convert_xyz_to_sRGB16(void * voidrgb,
   const double m23 = .0415;
   const double m31 = .0557;
   const double m32 = -.2040;
-  const double m33 = 1.0570;
+  const double m33 = 1.0570;*/
   BaseC16 * brgb = (BaseC16 *)voidrgb;
   double x = bxyz->a;
   double y = bxyz->b;
@@ -374,7 +425,8 @@ int convert_xyz_to_sRGB16(void * voidrgb,
     return -1;
 
   /* R */
-  r = x*m11 + y*m12 + z*m13;
+  //r = x*m11 + y*m12 + z*m13;
+  r = x*ref->matrix.m11 + y*ref->matrix.m12 + z*ref->matrix.m13;
   r = GAMMACORRECT(r);
   if (r < 0.0) {
     r = 0.0;
@@ -384,7 +436,8 @@ int convert_xyz_to_sRGB16(void * voidrgb,
   brgb->rgba.r = (uint16)((uint32)(65535.0*r));
 
   /* G */
-  r = x*m21 + y*m22 + z*m23;
+  //r = x*m21 + y*m22 + z*m23;
+  r = x*ref->matrix.m21 + y*ref->matrix.m22 + z*ref->matrix.m23;
   r = GAMMACORRECT(r);
   if (r < 0.0) {
     r = 0.0;
@@ -394,7 +447,8 @@ int convert_xyz_to_sRGB16(void * voidrgb,
   brgb->rgba.g = (uint16)((uint32)(65535.0*r));
 
   /* B */
-  r = x*m31 + y*m32 + z*m33;
+  //r = x*m31 + y*m32 + z*m33;
+  r = x*ref->matrix.m31 + y*ref->matrix.m32 + z*ref->matrix.m33;
   r = GAMMACORRECT(r);
   if (r < 0.0) {
     r = 0.0;
@@ -664,7 +718,7 @@ int convert_lab_to_xyz_old8(BaseD * bxyz, BaseD * blab)
 
 
 
-int convert_luv_to_xyz(BaseD * bxyz, BaseD * bluv)
+int convert_luv_to_xyz_alt(BaseD * bxyz, BaseD * bluv)
 {
   double upn = 0.2009;
   double vpn = 0.4610;
@@ -692,44 +746,6 @@ int convert_luv_to_xyz(BaseD * bxyz, BaseD * bluv)
   bxyz->a = bxyz->b * 9.0*up/4.0/vp;
   /* Z */
   bxyz->c = bxyz->b * (12.0-3.0*up-20.0*vp)/4.0/vp;
-
-  return 0;
-}
-
-
-int convert_luv_to_xyz_1(BaseD * bxyz, BaseD * bluv)
-{
-  /* XYZ tristimulus values for 2 deg observer and D65 */
-  const double xr = 0.9505; //1.205; //illuminant E? //73000. for each for E
-  const double yr = 1.0; //0.948;
-  const double zr = 1.0890; //0.909;
-  const double kappa = 903.3;
-  double l, u, v, Y;
-  
-  
-  if ((bxyz==NULL) || (bluv==NULL))
-    return PW_BAD_CALL;
-
-  l = bluv->a;
-  u = bluv->b;
-  v = bluv->c;
-
-  double vnot = 9.0*yr/(xr+15.0*yr+3.0*zr);
-  double unot = 4.0*xr/(xr+15.0*yr+3.0*zr);
-  double db = 39.0*l/(v + 13.0*l*vnot);
-  double ac = 52.0*l/(u + 13.0*l*unot)/3.0;
-
-  /* Y */
-  if (l <= 8.0) {
-    Y = l/kappa;
-  } else {
-    Y = pow((l+16.0)/116.0, 3.0);
-  }
-  bxyz->b = Y;
-  /* X */
-  bxyz->a = Y*db/ac;
-  /* Z */
-  bxyz->c = (bxyz->a)*(ac-1./3.)-5.0*Y;
 
   return 0;
 }

@@ -282,6 +282,21 @@ int file_reader(CoreOpts * core,
     sub = json_object_object_get(minor, "space");
     canv->visuals.colors->space = space_to_space(json_object_get_string(sub));
     if (canv->visuals.colors->space != MONO) {
+      sub = json_object_object_get(minor, "illuminant");
+      canv->visuals.colors->reference = illum_to_illum(json_object_get_string(sub));
+      if (canv->visuals.colors->reference == UNKNOWN) {
+	json_object_put(root);
+	free(core->outs);
+	free(core->execs);
+	free(core->fins);
+	if (canv->secondary) {
+	  while (canv->secondaryl > 0) {
+	    free(canv->secondary[--(canv->secondaryl)]);
+	  }
+	  free(canv->secondary);
+	}
+	return OPT_CONF_CLR_REF;
+      }
       sub = json_object_object_get(minor, "algorithm");
       batboy = json_object_object_get(sub, "type");
       canv->visuals.colors->mode = mode_to_mode(json_object_get_string(batboy));
