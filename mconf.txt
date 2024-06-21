@@ -5,7 +5,7 @@
     "core": {
         "location": "lib",
         "algorithm": "libmandelqb.so",
-        "output": "libcolorpng.so",
+        "output": "libbwpng.so",
         "file": [
             "mput1.png",
 	    "mput2.png"
@@ -15,7 +15,7 @@
         "bottom": 0.55,
         "realheight": 0.2,
         "pixelheight": 100,
-        "left":-0.10,
+        "left":0.10,
         "realwidth": 0.2,
         "pixelwidth": 100,
         "offset_Re": 0.0,
@@ -28,7 +28,7 @@
     },
     "visualization": {
     	"compression": 1,
-	"channeldepth": 16,
+	"channeldepth": 8,
 	"colorization": {
         	"space": "lch",	
 		"algorithm": {

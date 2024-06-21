@@ -258,14 +258,10 @@ void FINISH(CanvasOpts * opts,
       bytecopy = memcpy;
       datasize = sizeof(BaseC8);\
       swatchrgb = malloc(sizeof(datasize));
-      for (i=0; i<opts->nheight; i++)
-	rows[i] = malloc(sizeof(png_byte)*opts->nwidth*datasize);
     } else {
       convertptr = convert_xyz_to_sRGB16;
       datasize = sizeof(BaseC16);
       swatchrgb = malloc(sizeof(datasize));
-      for (i=0; i<opts->nheight; i++) 
-	rows[i] = malloc(sizeof(png_byte)*opts->nwidth*datasize);
       switch (O32_HOST_ORDER) {
       case O32_LITTLE_ENDIAN:
 	bytecopy = byte_n_switch_16;
@@ -276,8 +272,9 @@ void FINISH(CanvasOpts * opts,
       default:
 	return; //I'm not handling PDP or HONEYWELL at the moment
       }
-
     }
+    for (i=0; i<opts->nheight; i++)
+      rows[i] = malloc(sizeof(png_byte)*opts->nwidth*datasize);
 
     for (i=0; i<opts->nheight; i++) {
       for (j=0; j<opts->nwidth; j++) {

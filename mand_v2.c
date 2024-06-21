@@ -169,6 +169,7 @@ int main(int argc, char ** argv)
   if (general.execute) {
     close_libraries(&general, &debug);
   }
+  /* (the rest is currently unnecessary) */
   DEBUG(&debug, D1, "frascr::main: Cleaning up core.\n");
   options_core_cleanup(&general);
   DEBUG(&debug, D1, "frascr::main: Cleaning up canvas.\n");

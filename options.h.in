@@ -68,7 +68,33 @@ void options_canvas_initialize(CanvasOpts * canv);
 
 void options_canvas_cleanup(CanvasOpts * canv);
 
+#define HELP_FOR_OPTIONS(out) { fprintf(out,\
+    "Usage: [-flag value] [--longflag=value] ... [filenames list]\n"	\
+    "    Example for conf file usage: ./frascr -f myconf.json\n"\
+    "General options:\n"\
+    "    -v, --verbose      increase verbosity of output by one level, may be called repeatedly\n"\
+    "    -h, --help         this message\n"\
+    "Core options:\n"							\
+    "    -E, --EXECUTE      set absolute library path name for EXECUTE algorithm\n" \
+    "    -F, --FINISH       set absolute library path name for FINISH & VALIDATE functionality\n" \
+    "Canvas options:\n"							\
+    "    -b, --bottom       set bottom (imaginary) coordinate in complex plane\n"\
+    "    -m, --pixelheight  set number of vertical pixels in computation\n"\
+    "    -i, --realheight   set height of domain in complex plane, beginning at BOTTOM\n"\
+    "    -l, --left         set left (real) coordinate in complex plane\n"\
+    "    -n, --pixelwidth   set number of horizontal pixels in computation\n"\
+    "    -j, --realwidth    set width of domain in complex plane, beginning at LEFT\n"\
+    "    -x, --offsetre     set real part of constant used in iterative computation if applicable\n"\
+    "    -y, --offsetim     set imaginary part of constant used in iterative computation if applicable\n"\
+    "    -e, --escape       set escape limit: upper bound for number of iterations\n"\
+    "    -s, --secondary    auxilliary data, must be a double-quote enclosed string of space-separated values\n"\
+    "Visualization/Colorization options:\n"\
+    "    If colorization is needed for the FINISH library, please use a configuration file.\n"\
+    "    For black-and-white, an 8-bit compressed png will be produced, or use a configuration file.\n"\
+					); }
 
+
+/*
 #define HELP_FOR_OPTIONS(out) { fprintf(out, "Version %d.%d \
           \nUsage: [-flag value] [--longflag=value] ... [filenames list]\
 	  \n-a, --algorithm    set library path name for EXECUTE algorithm\
@@ -88,6 +114,6 @@ void options_canvas_cleanup(CanvasOpts * canv);
 	  \n                   default is zero\
 	  \n-y, --offsetim     set imaginary part of complex constant used in iterative computation\
 	  \n                   default is zero\n", frascr_VERSION_MAJOR, frascr_VERSION_MINOR); }
-
+*/
 
 #endif /* OPTIONS_h */

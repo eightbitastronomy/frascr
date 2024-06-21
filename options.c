@@ -132,6 +132,88 @@ static inline void read_chrs16(json_object * obj, int n, void * swatch) {
 }
 
 
+static inline int extend_the_str_list(char *** target, int * len) {
+  int i, newlen;
+  newlen = 2*(*len);
+  char ** buffer = malloc(newlen*sizeof(char *));
+  if (buffer == NULL)
+    return -1;
+  for (i=0; i<(*len); i++) {
+    buffer[i] = strdup((*target)[i]);
+    if (buffer[i] == NULL) {
+      for (i; i>0; --i)
+	free(buffer[i]);
+      return -1;
+    }
+  }
+  for (i=0; i<(*len); i++) {
+    free((*target)[i]);
+  }
+  free(*target);
+  *target = buffer;
+  *len = newlen;
+  return 0;
+}
+
+
+static inline void trim_the_str_list(CanvasOpts * canv, int len) {
+  char ** buffer;
+  int i;
+  buffer = malloc(len*sizeof(char *));
+  for (i=0; i<len; i++) {
+    buffer[i] = canv->secondary[i];
+  }
+  free(canv->secondary);
+  canv->secondary = buffer;
+  return;
+}
+
+
+static inline int parse_secondary_args_from_cmdline(CanvasOpts * canv, char * input) {
+  int len = strlen(input);
+  int ncurrent = len/2 + 1; //this should be large enough even for the worst case, "1 2 3 4" etc
+  int i_input = 0;
+  int j_buffer = -1;
+  int copyflag = 0;
+  int start, stop;
+  canv->secondary = malloc(ncurrent*sizeof(char *));
+  do {
+    if (input[i_input] != ' ') {
+      if (copyflag == 0) {
+	copyflag = 1;
+	j_buffer++;
+	if (j_buffer == ncurrent) {
+	  if (extend_the_str_list(&(canv->secondary), &ncurrent)) {
+	    for (j_buffer; j_buffer>=0; --j_buffer) {
+	      free(canv->secondary[j_buffer]);
+	    }
+	    free(canv->secondary);
+	    canv->secondary == NULL;
+	    return -1; 
+	  }
+	}
+	start = i_input;
+	stop = i_input;
+      } else {
+	stop = i_input;
+      } 
+    } else {
+      if (copyflag != 0) {
+	copyflag = 0;
+	canv->secondary[j_buffer] = strndup(&input[start], stop-start+1);
+      }
+    }
+    i_input++;
+  } while (i_input < len);
+  if (copyflag != 0) {
+    canv->secondary[j_buffer] = strndup(&input[start], stop-start+1);
+  }
+  canv->secondaryl = j_buffer + 1;
+  trim_the_str_list(canv, j_buffer+1);
+  return 0;
+}
+
+
 int file_reader(CoreOpts * core,
 		CanvasOpts * canv,
 		DParam * debug,
@@ -387,20 +469,21 @@ int process_options(CoreOpts * core,
   while (fileflag == 0) {
 
     static struct option long_options[] = {
-      {"algorithm", required_argument, 0, 'a'},
+      {"EXECUTE", required_argument, 0, 'E'},
       {"bottom", required_argument, 0, 'b'},
       {"escape", required_argument, 0, 'e'},
       {"file", required_argument, 0, 'f'},
       {"help", no_argument, 0, 'h'},
-      {"pixelheight", required_argument, 0, 'i'},
-      {"realheight", required_argument, 0, 'I'},
+      {"pixelheight", required_argument, 0, 'm'},
+      {"realheight", required_argument, 0, 'i'},
       {"left", required_argument, 0, 'l'},
-      {"output", required_argument, 0, 'o'},
+      {"FINISH", required_argument, 0, 'F'},
       {"verbose", no_argument, 0, 'v'},
-      {"pixelwidth", required_argument, 0, 'j'},
-      {"realwidth", required_argument, 0, 'J'},
+      {"pixelwidth", required_argument, 0, 'n'},
+      {"realwidth", required_argument, 0, 'j'},
       {"offsetre", required_argument, 0, 'x'},
       {"offsetim", required_argument, 0, 'y'},
+      {"secondary", required_argument, 0, 's'},
       {0, 0, 0, 0}
     };
 
@@ -408,7 +491,7 @@ int process_options(CoreOpts * core,
 
     ret = getopt_long(num,
 		      args,
-		      "a:b:e:f:hi:I:j:J:l:o:vw:W:x:y:",
+		      "b:e:f:hi:j:l:m:n:s:vx:y:E:F:",
 		      long_options,
 		      &option_index);
 
@@ -417,10 +500,6 @@ int process_options(CoreOpts * core,
 
     switch (ret)
       {
-      case 'a':
-	if (optarg)
-	  core->execs = strndup(optarg, 255);
-	break;
       case 'b':
 	if (optarg)
 	  canv->bottom = atof(optarg);
@@ -429,28 +508,28 @@ int process_options(CoreOpts * core,
 	if (optarg)
 	  canv->escape = atoi(optarg);
 	break;
+      case 'E':
+	if (optarg)
+	  core->execs = strndup(optarg, 255);
+	break;
       case 'f':
 	if (optarg) {
 	  files = strndup(optarg, 255);
 	  fileflag = 1;
 	}
 	break;
+      case 'F':
+	if (optarg)
+	  core->fins = strndup(optarg, 255);
+	break;
       case 'h':
 	HELP_FOR_OPTIONS(debug->out);
 	return 0;
       case 'i':
 	if (optarg)
-	  canv->nheight = atoi(optarg);
-	break;
-      case 'I':
-	if (optarg)
 	  canv->height = atof(optarg);
 	break;
       case 'j':
-	if (optarg)
-	  canv->nwidth = atoi(optarg);
-	break;
-      case 'J':
 	if (optarg)
 	  canv->width = atof(optarg);
 	break;
@@ -458,9 +537,18 @@ int process_options(CoreOpts * core,
 	if (optarg)
 	  canv->left = atof(optarg);
 	break;
-      case 'o':
+      case 'm':
 	if (optarg)
-	  core->fins = strndup(optarg, 255);
+	  canv->nheight = atoi(optarg);
+	break;
+      case 'n':
+	if (optarg)
+	  canv->nwidth = atoi(optarg);
+	break;
+      case 's':
+	if (optarg)
+	  if (parse_secondary_args_from_cmdline(canv, optarg))
+	    return OPT_BAD_OPTION;
 	break;
       case 'v':
 	verbose++;
@@ -515,6 +603,8 @@ int process_options(CoreOpts * core,
 
 static inline void options_visuals_initialize(VisualizationOpts * v) {
   v->colors = NULL;
+  v->compression = 1;
+  v->depth = 8;
 }
 
 

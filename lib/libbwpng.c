@@ -30,10 +30,40 @@
 
 
 #include "libbwpng.h"
+#include "bitorder.h"
 #include <stdlib.h>
 #include <string.h>
 #include <png.h>
 #include <zlib.h>
+
+
+static inline void * byte_n_switch_16(void * destn, const void * source, size_t sz) {
+  int i;
+  unsigned char * dest = destn;
+  const unsigned char * src = source;
+  *(dest) = *(src + 1);
+  *(dest + 1) = *(src);
+  return NULL;
+}
+
+
+static inline uint32 find_max_intensity(Datum ** const dat,
+					   const int rows,
+					   const int cols)
+{
+  int i, j;
+  uint32 n;
+  uint32 max = 0;
+  for (i=0; i<rows; i++) {
+    for (j=0; j<cols; j++) {
+      n = dat[i][j].n;
+      if (n > max)
+	max = n;
+    }
+  }
+
+  return max;
+}
 
 
 void FINISH(CanvasOpts * opts,
@@ -44,19 +74,29 @@ void FINISH(CanvasOpts * opts,
 {
 
   int i, j;
+
+  /* Data & control variables */
   int max, rno;
   Datum ** canvas;
   FILE * output;
-  unsigned short ** storage = NULL;
-  uint16 MAX_VAL = ~(unsigned short)(0);
-  uint16 storeval;
+
+  /* libpng variables */ 
   png_voidp errorptr = NULL;
   png_structp pngptr = NULL;
   png_infop infoptr = NULL;
   png_text * textptr = NULL;
   const int textfields = 3;
   char texttmp[511];
-  int datasize = sizeof(uint16);
+  png_byte ** rows;
+
+  /* Intensity conversion helpers */
+  uint16 MAX_VAL = ~(unsigned short)(0);
+  int datasize;
+  uint32 intensitymax;
+  double storevald;
+
+  /* Intensity-to-libpng helpers */
+  void *(*bytecopy)(void *, const void *, size_t);
 
   max = (datal <= filel ? datal : filel);
 
@@ -132,18 +172,38 @@ void FINISH(CanvasOpts * opts,
       //fprintf(stderr, "png_set_text\n");
       png_set_text(pngptr, infoptr, textptr, textfields);
     }
+
+    /* find maximum intensity */
+
+    intensitymax = find_max_intensity(canvas, opts->nwidth, opts->nheight);
     
     /* transpose input data for libpng, and (for now) scale data into black & white */
 
-    storage = malloc(sizeof(uint16 *)*opts->nheight);
+    rows = malloc(sizeof(png_byte *)*opts->nheight);
+    if (opts->visuals.depth == 8) {
+      bytecopy = memcpy;
+      datasize = sizeof(uint8);\
+    } else {
+      datasize = sizeof(uint16);
+      switch (O32_HOST_ORDER) {
+      case O32_LITTLE_ENDIAN:
+	bytecopy = byte_n_switch_16;
+	break;
+      case O32_BIG_ENDIAN:
+	bytecopy = memcpy;
+	break;
+      default:
+	return; //I'm not handling PDP or HONEYWELL at the moment
+      }
+
+    }
     for (i=0; i<opts->nheight; i++)
-      storage[i] = malloc(sizeof(uint16)*datasize*opts->nwidth);
-    png_byte ** rows = malloc(sizeof(png_byte *)*opts->nheight);
+      rows[i] = malloc(sizeof(png_byte)*opts->nwidth*datasize);
+
     for (i=0; i<opts->nheight; i++) {
-      rows[i] = (png_byte *)(storage[i]);
       for (j=0; j<opts->nwidth; j++) {
-	storeval = (uint16)((double)MAX_VAL * (double)canvas[j][i].n / (double)opts->escape);
-	storage[opts->nheight-i-1][j] = storeval;
+	storevald = intensitymax == 0 ? 0.0 : (double)(canvas[j][i].n) / (double)(intensitymax);
+	bytecopy(&(rows[opts->nheight-i-1][datasize*j]), (void *)(&storevald), datasize);
       }
     }
     
@@ -155,20 +215,17 @@ void FINISH(CanvasOpts * opts,
     png_write_png(pngptr, infoptr, PNG_TRANSFORM_IDENTITY, NULL);
     png_write_image(pngptr, rows);
     png_write_end(pngptr, infoptr);
-    png_destroy_write_struct(&pngptr, &infoptr);
     
     /* Cleanup */
-    
-    if (storage) {
+
+    png_destroy_write_struct(&pngptr, &infoptr);
+    if (rows) {
       for (i=0; i<opts->nheight; i++)
-	if (storage[i]) {
-	  free(storage[i]);
-	  storage[i] = NULL;
+	if (rows[i]) {
+	  free(rows[i]);
 	}
-      free(storage);
-    }
-    if (rows)
       free(rows);
+    }
     if (textptr)
       free(textptr);
     
@@ -184,7 +241,7 @@ int VALIDATE(Datum *** dataa,
 	    int filel)
 {
   int i;
-  
+
   if ((dataa==NULL) || (filea==NULL))
     return PW_BAD_CALL;
 
